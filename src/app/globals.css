@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #f4efe6;
+  --bg-elevated: #fffdf8;
+  --bg-muted: #ebe4d6;
+  --ink: #1b1712;
+  --muted: #6f6659;
+  --line: #d8cfbf;
+  --accent: #8a5a2b;
+  --accent-ink: #fffdf8;
+  --up: #2f6b4f;
+  --down: #9b3d32;
+  --warn: #8a6a1a;
+  --focus: #3d5a80;
+}
+
+.dark {
+  --bg: #12100d;
+  --bg-elevated: #1c1914;
+  --bg-muted: #241f19;
+  --ink: #f0e6d4;
+  --muted: #b3a48e;
+  --line: #3a342b;
+  --accent: #c4925a;
+  --accent-ink: #1b1712;
+  --up: #7dbe9a;
+  --down: #e08a7c;
+  --warn: #e0c36a;
+  --focus: #8fb0d6;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-muted: var(--bg-muted);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-up: var(--up);
+  --color-down: var(--down);
+  --color-warn: var(--warn);
+  --font-sans: var(--font-source-sans);
+  --font-display: var(--font-fraunces);
+  --font-mono: var(--font-ibm-plex-mono);
+}
+
+* {
+  border-color: var(--line);
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+h1,
+h2,
+h3,
+.display {
+  font-family: var(--font-fraunces), ui-serif, Georgia, serif;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+}

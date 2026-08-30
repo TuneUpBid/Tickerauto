@@ -1,0 +1,963 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AppEnvironment {
+  DEVELOPMENT
+  DEMONSTRATION
+  TEST
+  PRODUCTION
+}
+
+enum UserRole {
+  COLLECTOR
+  APPRAISER
+  LENDER
+  ADMINISTRATOR
+}
+
+enum OrgType {
+  COLLECTOR
+  APPRAISAL_FIRM
+  LENDER
+  PLATFORM
+}
+
+enum MembershipStatus {
+  INVITED
+  ACTIVE
+  SUSPENDED
+}
+
+enum VehicleStatus {
+  OWNED
+  CONSIGNED
+  SOLD
+}
+
+enum MileageUnit {
+  MI
+  KM
+}
+
+enum MatchingNumbersStatus {
+  UNKNOWN
+  CLAIMED
+  INSPECTED_MATCHING
+  INSPECTED_NON_MATCHING
+  NOT_APPLICABLE
+}
+
+enum TitleStatus {
+  UNKNOWN
+  CLEAN
+  SALVAGE
+  REBUILT
+  BONDED
+  EXPORT
+  LIEN_RECORDED
+  OTHER
+}
+
+enum ExpenseCategory {
+  BUYER_FEE
+  TRANSPORTATION
+  TAX
+  CAPITAL_IMPROVEMENT
+  MAINTENANCE
+  INSURANCE
+  STORAGE
+  SELLING_FEE
+  OTHER_OPERATING
+}
+
+enum DocumentKind {
+  PHOTO
+  BILL_OF_SALE
+  TITLE
+  REGISTRATION
+  BUILD_SHEET
+  SERVICE_RECORD
+  APPRAISAL
+  INSURANCE
+  LIEN
+  INSPECTION
+  OTHER
+}
+
+enum Sensitivity {
+  STANDARD
+  SENSITIVE
+}
+
+enum SaleStatus {
+  SOLD
+  RESERVE_NOT_MET
+  RESULT_UNAVAILABLE
+  CANCELED
+  WITHDRAWN
+  LIVE
+  ASKING
+}
+
+enum ValueType {
+  FAIR_MARKET
+  RETAIL_MARKET
+  WHOLESALE
+  ORDERLY_LIQUIDATION
+  FORCED_SALE
+  INSURANCE_AGREED
+}
+
+enum ValuationStatus {
+  DRAFT
+  REVIEWED
+  CERTIFIED
+  EXPIRED
+  SUPERSEDED
+  INSUFFICIENT_DATA
+}
+
+enum DataFreshness {
+  CURRENT
+  STALE
+  INSUFFICIENT
+  PROVIDER_UNAVAILABLE
+}
+
+enum AssignmentStatus {
+  REQUESTED
+  ACCEPTED
+  IN_PROGRESS
+  INSPECTION_COMPLETE
+  SUBMITTED
+  CERTIFIED
+  DECLINED
+  CANCELED
+}
+
+enum InspectionType {
+  PHYSICAL
+  REMOTE_DOCUMENTED
+}
+
+enum CredentialVerificationStatus {
+  UNVERIFIED
+  VERIFIED
+  EXPIRED
+  REJECTED
+}
+
+enum ReportStatus {
+  DRAFT
+  FINALIZED
+  ACTIVE
+  EXPIRED
+  REVOKED
+  SUPERSEDED
+}
+
+enum ShareStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+enum LenderDecisionStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  ADDITIONAL_EVIDENCE_REQUIRED
+}
+
+enum VerificationCheckType {
+  VIN_DECODE
+  VIN_CHECK_DIGIT
+  MAKE_MODEL_CONSISTENCY
+  TITLE
+  LIEN
+  THEFT
+  SALVAGE_BRAND
+  ODOMETER_HISTORY
+  VEHICLE_HISTORY
+  MATCHING_NUMBERS
+  DOCUMENT
+}
+
+enum VerificationOutcome {
+  NOT_PERFORMED
+  PROVIDER_UNAVAILABLE
+  PASSED
+  FAILED
+  INCONCLUSIVE
+}
+
+enum ProviderHealth {
+  UNCONFIGURED
+  HEALTHY
+  DEGRADED
+  UNAVAILABLE
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  emailNormalized String    @unique
+  emailVerifiedAt DateTime?
+  passwordHash    String
+  name            String
+  displayName     String?
+  mfaEnabled      Boolean   @default(false)
+  mfaSecretEnc    String?
+  lockedUntil     DateTime?
+  failedLogins    Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+
+  memberships           Membership[]
+  sessions              Session[]
+  emailTokens           EmailToken[]
+  ownedCollections      Collection[]          @relation("CollectionOwner")
+  auditEvents           AuditEvent[]
+  uploadedDocuments     Document[]
+  requestedAssignments  AppraisalAssignment[] @relation("AssignmentClient")
+  appraiserAssignments  AppraisalAssignment[] @relation("AssignmentAppraiser")
+  inspections           Inspection[]
+  credentials           AppraiserCredential[]
+  signatures            ElectronicSignature[]
+  createdShares         ReportShare[]         @relation("ShareCreator")
+  accessLogs            AccessLog[]
+  lenderDecisions       LenderDecision[]
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  type      OrgType
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  memberships         Membership[]
+  collections         Collection[]
+  auditEvents         AuditEvent[]
+  assignmentsAsClient AppraisalAssignment[] @relation("ClientOrg")
+  assignmentsAsFirm   AppraisalAssignment[] @relation("FirmOrg")
+  lenderRequirements  LenderRequirement[]
+  receivedShares      ReportShare[]
+}
+
+model Membership {
+  id             String           @id @default(cuid())
+  userId         String
+  organizationId String
+  role           UserRole
+  status         MembershipStatus @default(ACTIVE)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId, role])
+  @@index([organizationId, role])
+}
+
+model Session {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  revokedAt DateTime?
+  ipAddress String?
+  userAgent String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model EmailToken {
+  id        String    @id @default(cuid())
+  userId    String
+  purpose   String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose])
+}
+
+model AuditEvent {
+  id            String   @id @default(cuid())
+  actorUserId   String?
+  organizationId String?
+  timestamp     DateTime @default(now())
+  action        String
+  subjectType   String
+  subjectId     String
+  previousValue Json?
+  newValue      Json?
+  source        String
+  correlationId String
+  reason        String?
+  ipAddress     String?
+  immutable     Boolean  @default(true)
+
+  actor        User?         @relation(fields: [actorUserId], references: [id])
+  organization Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([subjectType, subjectId])
+  @@index([organizationId, timestamp])
+  @@index([correlationId])
+}
+
+model Collection {
+  id             String   @id @default(cuid())
+  organizationId String
+  ownerUserId    String
+  name           String
+  description    String?
+  currency       String   @default("USD")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization         @relation(fields: [organizationId], references: [id])
+  owner        User                 @relation("CollectionOwner", fields: [ownerUserId], references: [id])
+  vehicles     Vehicle[]
+  snapshots    PortfolioSnapshot[]
+  assignments  AppraisalAssignment[]
+
+  @@index([organizationId])
+  @@index([ownerUserId])
+}
+
+model Vehicle {
+  id                       String                 @id @default(cuid())
+  collectionId             String
+  vin                      String?
+  chassisNumber            String?
+  year                     Int
+  make                     String
+  model                    String
+  generation               String?
+  series                   String?
+  trim                     String?
+  bodyStyle                String?
+  engine                   String?
+  transmission             String?
+  drivetrain               String?
+  exteriorColor            String?
+  interiorColor            String?
+  currentMileage           Int?
+  mileageUnit              MileageUnit            @default(MI)
+  factoryOptions           Json?
+  modifications            Json?
+  restorationHistory       String?
+  matchingNumbersStatus    MatchingNumbersStatus  @default(UNKNOWN)
+  conditionGrade           String?
+  titleStatus              TitleStatus            @default(UNKNOWN)
+  registrationJurisdiction String?
+  storageLocation          String?
+  era                      String?
+  category                 String?
+  status                   VehicleStatus          @default(OWNED)
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
+
+  collection          Collection            @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  ownershipRecords    OwnershipRecord[]
+  acquisition         Acquisition?
+  sale                Sale?
+  expenses            Expense[]
+  documents           Document[]
+  titles              Title[]
+  liens               Lien[]
+  insurancePolicies   InsurancePolicy[]
+  verificationChecks  VerificationCheck[]
+  inspections         Inspection[]
+  valuations          Valuation[]
+  valueSnapshots      ValueSnapshot[]
+  assignments         AppraisalAssignment[]
+
+  @@index([collectionId])
+  @@index([make, model, year])
+  @@index([vin])
+}
+
+model OwnershipRecord {
+  id             String    @id @default(cuid())
+  vehicleId      String
+  ownerName      String
+  startedOn      DateTime
+  endedOn        DateTime?
+  provenanceNote String?
+  createdAt      DateTime  @default(now())
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+}
+
+model Acquisition {
+  id                   String   @id @default(cuid())
+  vehicleId            String   @unique
+  acquiredOn           DateTime
+  priceMinor           BigInt
+  currency             String   @default("USD")
+  buyerFeesMinor       BigInt   @default(0)
+  transportationMinor  BigInt   @default(0)
+  taxesMinor           BigInt   @default(0)
+  counterparty         String?
+  notes                String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+}
+
+model Sale {
+  id              String    @id @default(cuid())
+  vehicleId       String    @unique
+  soldOn          DateTime
+  proceedsMinor   BigInt
+  sellingFeesMinor BigInt   @default(0)
+  currency        String    @default("USD")
+  counterparty    String?
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+}
+
+model Expense {
+  id          String          @id @default(cuid())
+  vehicleId   String
+  category    ExpenseCategory
+  incurredOn  DateTime
+  amountMinor BigInt
+  currency    String          @default("USD")
+  description String?
+  createdAt   DateTime        @default(now())
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId, category])
+}
+
+model Document {
+  id               String       @id @default(cuid())
+  vehicleId        String?
+  uploadedById     String
+  kind             DocumentKind
+  sensitivity      Sensitivity  @default(STANDARD)
+  fileName         String
+  contentType      String
+  byteSize         Int
+  storageKey       String
+  sha256           String
+  malwareScanStatus String      @default("not_configured")
+  malwareScanAt    DateTime?
+  createdAt        DateTime     @default(now())
+
+  vehicle    Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  uploadedBy User     @relation(fields: [uploadedById], references: [id])
+
+  @@index([vehicleId])
+  @@index([sha256])
+}
+
+model Title {
+  id             String      @id @default(cuid())
+  vehicleId      String
+  status         TitleStatus
+  jurisdiction   String?
+  titleNumber    String?
+  recordedOn     DateTime?
+  notes          String?
+  createdAt      DateTime    @default(now())
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+}
+
+model Lien {
+  id           String    @id @default(cuid())
+  vehicleId    String
+  holder       String
+  recordedOn   DateTime?
+  releasedOn   DateTime?
+  amountMinor  BigInt?
+  currency     String    @default("USD")
+  notes        String?
+  createdAt    DateTime  @default(now())
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+}
+
+model InsurancePolicy {
+  id            String    @id @default(cuid())
+  vehicleId     String
+  carrier       String
+  policyNumber  String?
+  agreedValueMinor BigInt?
+  currency      String    @default("USD")
+  effectiveOn   DateTime?
+  expiresOn     DateTime?
+  notes         String?
+  createdAt     DateTime  @default(now())
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+}
+
+model VerificationCheck {
+  id              String                 @id @default(cuid())
+  vehicleId       String
+  type            VerificationCheckType
+  provider        String
+  outcome         VerificationOutcome
+  performedAt     DateTime?
+  sourceReference String?
+  summary         String?
+  rawChecksum     String?
+  createdAt       DateTime               @default(now())
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId, type])
+}
+
+model MarketProvider {
+  id           String         @id @default(cuid())
+  slug         String         @unique
+  name         String
+  kind         String
+  health       ProviderHealth @default(UNCONFIGURED)
+  lastCheckedAt DateTime?
+  lastError    String?
+  licenseNotes String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  transactions MarketTransaction[]
+  jobs         ImportJob[]
+}
+
+model MarketTransaction {
+  id                    String     @id @default(cuid())
+  providerId            String
+  providerSlug          String
+  source                String
+  sourceRecordId        String
+  sourceUrl             String?
+  retrievedAt           DateTime
+  auctionStartAt        DateTime?
+  auctionEndAt          DateTime?
+  saleLocation          String?
+  currency              String
+  originalAmountMinor   BigInt?
+  normalizedUsdMinor    BigInt?
+  fxRate                Decimal?   @db.Decimal(18, 8)
+  fxSource              String?
+  fxDate                DateTime?
+  hammerPriceMinor      BigInt?
+  buyersPremiumMinor    BigInt?
+  priceIncludesPremium  Boolean?
+  saleStatus            SaleStatus
+  reserveNotMet         Boolean    @default(false)
+  year                  Int?
+  make                  String?
+  model                 String?
+  trim                  String?
+  bodyStyle             String?
+  engine                String?
+  transmission          String?
+  drivetrain            String?
+  mileage               Int?
+  mileageUnit           MileageUnit?
+  condition             String?
+  specifications        Json?
+  modifications         Json?
+  knownDefects          Json?
+  vin                   String?
+  imageUrl              String?
+  imageLicensed         Boolean    @default(false)
+  rawPayload            Json?
+  rawChecksum           String
+  licenseRestrictions   String?
+  createdAt             DateTime   @default(now())
+
+  provider    MarketProvider         @relation(fields: [providerId], references: [id])
+  selections  ComparableSelection[]
+
+  @@unique([providerSlug, source, sourceRecordId])
+  @@index([make, model, year, saleStatus])
+  @@index([vin])
+  @@index([auctionEndAt])
+}
+
+model MethodologyVersion {
+  id          String   @id @default(cuid())
+  slug        String
+  version     String
+  name        String
+  valueType   ValueType
+  description String
+  config      Json
+  approvedBy  String?
+  approvedAt  DateTime?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  valuations Valuation[]
+
+  @@unique([slug, version])
+}
+
+model Valuation {
+  id                   String          @id @default(cuid())
+  vehicleId            String
+  methodologyVersionId String
+  status               ValuationStatus
+  freshness            DataFreshness
+  effectiveOn          DateTime
+  intendedUse          String
+  intendedUsers        String
+  definitionOfValue    ValueType
+  scopeOfWork          String
+  dataSources          Json
+  estimatedValueMinor  BigInt?
+  rangeLowMinor        BigInt?
+  rangeHighMinor       BigInt?
+  currency             String          @default("USD")
+  confidence           String?
+  confidenceNote       String?
+  reconciliation       String?
+  limitingConditions   String
+  assumptions          String
+  extraordinaryAssumptions String?
+  reviewerUserId       String?
+  insufficientReason   String?
+  staleBecause         String?
+  providerFailure      String?
+  supersededById       String?         @unique
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+
+  vehicle            Vehicle            @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  methodologyVersion MethodologyVersion @relation(fields: [methodologyVersionId], references: [id])
+  supersededBy       Valuation?         @relation("ValuationSupersedes", fields: [supersededById], references: [id])
+  supersedes         Valuation?         @relation("ValuationSupersedes")
+  comparableSet      ComparableSet?
+  snapshots          ValueSnapshot[]
+  assignment         AppraisalAssignment?
+
+  @@index([vehicleId, effectiveOn])
+}
+
+model ComparableSet {
+  id          String   @id @default(cuid())
+  valuationId String   @unique
+  createdAt   DateTime @default(now())
+
+  valuation  Valuation             @relation(fields: [valuationId], references: [id], onDelete: Cascade)
+  selections ComparableSelection[]
+}
+
+model ComparableSelection {
+  id                    String   @id @default(cuid())
+  comparableSetId       String
+  marketTransactionId   String
+  included              Boolean
+  similarityScore       Float
+  inclusionReason       String
+  exclusionReason       String?
+  differences           Json
+  rawValueMinor         BigInt?
+  adjustedValueMinor    BigInt?
+  weight                Float?
+  createdAt             DateTime @default(now())
+
+  comparableSet     ComparableSet      @relation(fields: [comparableSetId], references: [id], onDelete: Cascade)
+  marketTransaction MarketTransaction  @relation(fields: [marketTransactionId], references: [id])
+  adjustments       ComparableAdjustment[]
+
+  @@index([comparableSetId])
+}
+
+model ComparableAdjustment {
+  id                     String   @id @default(cuid())
+  selectionId            String
+  factor                 String
+  amountMinor            BigInt
+  justification          String
+  createdAt              DateTime @default(now())
+
+  selection ComparableSelection @relation(fields: [selectionId], references: [id], onDelete: Cascade)
+}
+
+model ValueSnapshot {
+  id              String        @id @default(cuid())
+  vehicleId       String
+  valuationId     String?
+  capturedOn      DateTime
+  valueType       ValueType
+  amountMinor     BigInt?
+  currency        String        @default("USD")
+  freshness       DataFreshness
+  isObservedSale  Boolean       @default(false)
+  note            String?
+  createdAt       DateTime      @default(now())
+
+  vehicle   Vehicle    @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  valuation Valuation? @relation(fields: [valuationId], references: [id])
+
+  @@index([vehicleId, capturedOn])
+}
+
+model PortfolioSnapshot {
+  id                    String        @id @default(cuid())
+  collectionId          String
+  capturedOn            DateTime
+  estimatedValueMinor   BigInt?
+  appraisedValueMinor   BigInt?
+  acquisitionCostMinor  BigInt
+  currency              String        @default("USD")
+  freshness             DataFreshness
+  vehicleCount          Int
+  createdAt             DateTime      @default(now())
+
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@index([collectionId, capturedOn])
+}
+
+model AppraiserCredential {
+  id                     String                       @id @default(cuid())
+  userId                 String
+  organization           String
+  credentialType         String
+  specialty              String?
+  credentialNumber       String?
+  issuedOn               DateTime?
+  expiresOn              DateTime?
+  uspapEducationCurrent  Boolean                      @default(false)
+  uspapEducationThrough  DateTime?
+  geographicCoverage     String?
+  insuranceCarrier       String?
+  insuranceExpiresOn     DateTime?
+  verificationStatus     CredentialVerificationStatus @default(UNVERIFIED)
+  notes                  String?
+  createdAt              DateTime                     @default(now())
+  updatedAt              DateTime                     @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model AppraisalAssignment {
+  id                   String           @id @default(cuid())
+  collectionId         String
+  vehicleId            String?
+  valuationId          String?          @unique
+  clientUserId         String
+  clientOrgId          String
+  appraiserUserId      String?
+  firmOrgId            String?
+  status               AssignmentStatus @default(REQUESTED)
+  intendedUse          String
+  intendedUsers        String
+  valueType            ValueType        @default(FAIR_MARKET)
+  effectiveOn          DateTime
+  assignmentConditions String?
+  scopeOfWork          String
+  approachesUsed       String?
+  approachesExcluded   String?
+  competencyStatement  String?
+  conflictDisclosure   String?
+  independenceStatement String?
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+
+  collection Collection          @relation(fields: [collectionId], references: [id])
+  vehicle    Vehicle?            @relation(fields: [vehicleId], references: [id])
+  valuation  Valuation?          @relation(fields: [valuationId], references: [id])
+  client     User                @relation("AssignmentClient", fields: [clientUserId], references: [id])
+  clientOrg  Organization        @relation("ClientOrg", fields: [clientOrgId], references: [id])
+  appraiser  User?               @relation("AssignmentAppraiser", fields: [appraiserUserId], references: [id])
+  firmOrg    Organization?       @relation("FirmOrg", fields: [firmOrgId], references: [id])
+  inspection Inspection?
+  report     AppraisalReport?
+}
+
+model Inspection {
+  id                    String         @id @default(cuid())
+  assignmentId          String         @unique
+  vehicleId             String
+  inspectorUserId       String
+  type                  InspectionType
+  inspectedAt           DateTime
+  location              String?
+  conditionChecklist    Json?
+  paintBodyNotes        String?
+  mechanicalNotes       String?
+  originalityNotes      String?
+  matchingNumbersNotes  String?
+  modificationsNotes    String?
+  damageNotes           String?
+  restorationNotes      String?
+  missingComponents     String?
+  documentsReviewed     String?
+  inspectorNotes        String?
+  collectorAcknowledged Boolean        @default(false)
+  evidenceChecksum      String?
+  createdAt             DateTime       @default(now())
+
+  assignment AppraisalAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  vehicle    Vehicle             @relation(fields: [vehicleId], references: [id])
+  inspector  User                @relation(fields: [inspectorUserId], references: [id])
+}
+
+model AppraisalReport {
+  id                 String       @id @default(cuid())
+  assignmentId       String       @unique
+  publicId           String       @unique
+  version            Int          @default(1)
+  status             ReportStatus @default(DRAFT)
+  title              String
+  contentHash        String?
+  payload            Json
+  certificationText  String
+  workfileRetention  String?
+  expiresOn          DateTime?
+  supersededById     String?      @unique
+  createdAt          DateTime     @default(now())
+  finalizedAt        DateTime?
+
+  assignment   AppraisalAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  supersededBy AppraisalReport?    @relation("ReportSupersedes", fields: [supersededById], references: [id])
+  supersedes   AppraisalReport?    @relation("ReportSupersedes")
+  signature    ElectronicSignature?
+  shares       ReportShare[]
+}
+
+model ElectronicSignature {
+  id          String   @id @default(cuid())
+  reportId    String   @unique
+  signerId    String
+  signedAt    DateTime
+  statement   String
+  signatureHash String
+  createdAt   DateTime @default(now())
+
+  report AppraisalReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  signer User            @relation(fields: [signerId], references: [id])
+}
+
+model CertificationTemplate {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  name      String
+  body      String
+  legalReviewStatus String @default("draft_unreviewed")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model LenderRequirement {
+  id                     String    @id @default(cuid())
+  organizationId         String
+  name                   String
+  maxAppraisalAgeDays    Int       @default(180)
+  requiredValueTypes     Json
+  notes                  String?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+}
+
+model ReportShare {
+  id              String      @id @default(cuid())
+  reportId        String
+  createdById     String
+  lenderOrgId     String?
+  tokenHash       String      @unique
+  status          ShareStatus @default(ACTIVE)
+  expiresAt       DateTime
+  revokedAt       DateTime?
+  canDownload     Boolean     @default(true)
+  createdAt       DateTime    @default(now())
+
+  report    AppraisalReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  createdBy User            @relation("ShareCreator", fields: [createdById], references: [id])
+  lenderOrg Organization?   @relation(fields: [lenderOrgId], references: [id])
+  accessLogs AccessLog[]
+  decisions  LenderDecision[]
+}
+
+model AccessLog {
+  id          String   @id @default(cuid())
+  shareId     String
+  userId      String?
+  action      String
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+
+  share ReportShare @relation(fields: [shareId], references: [id], onDelete: Cascade)
+  user  User?       @relation(fields: [userId], references: [id])
+}
+
+model LenderDecision {
+  id          String                @id @default(cuid())
+  shareId     String
+  actorUserId String
+  status      LenderDecisionStatus
+  reason      String?
+  createdAt   DateTime              @default(now())
+
+  share ReportShare @relation(fields: [shareId], references: [id], onDelete: Cascade)
+  actor User        @relation(fields: [actorUserId], references: [id])
+}
+
+model ImportJob {
+  id           String    @id @default(cuid())
+  providerId   String?
+  name         String
+  status       JobStatus @default(PENDING)
+  payloadHash  String
+  attempt      Int       @default(0)
+  lastError    String?
+  startedAt    DateTime?
+  finishedAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  provider MarketProvider? @relation(fields: [providerId], references: [id])
+
+  @@unique([name, payloadHash])
+}
+
+model RetentionPolicy {
+  id            String   @id @default(cuid())
+  organizationId String? @unique
+  workfileYears Int      @default(5)
+  documentYears Int      @default(7)
+  auditYears    Int      @default(7)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

@@ -1,0 +1,283 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import {
+  acquisitionSchema,
+  appraisalRequestSchema,
+  collectionSchema,
+  expenseSchema,
+  lenderDecisionSchema,
+  shareReportSchema,
+  valuationRequestSchema,
+  vehicleSchema,
+} from "@/lib/validation";
+import { correlationId } from "@/lib/utils";
+import { getCurrentUser } from "../auth/session";
+import { prisma } from "../db";
+import {
+  requestAppraisal,
+  acceptAssignment,
+  recordInspection,
+  buildDraftReport,
+  signReport,
+} from "../services/appraisal";
+import { importAuthorizedJson } from "../services/market";
+import { recordAcquisition, recordExpense, createVehicle } from "../services/vehicles";
+import { developVehicleValuation } from "../services/valuation";
+import { recordLenderDecision, revokeShare, shareReport } from "../services/sharing";
+import { capturePortfolioSnapshot } from "../services/portfolio";
+import { getDocumentStorage } from "../providers/storage";
+import { getMalwareScanner } from "../providers/malware-scan";
+import { writeAudit } from "../audit";
+import { canMutateCollection } from "../rbac";
+import type { OldCarsAuctionRecord } from "@/domain/market-map";
+
+async function requireUser() {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  return user;
+}
+
+function text(formData: FormData, key: string) {
+  return String(formData.get(key) ?? "");
+}
+
+export async function createCollectionAction(
+  _prev: { error?: string } | null,
+  formData: FormData,
+): Promise<{ error?: string }> {
+  const user = await requireUser();
+  const parsed = collectionSchema.safeParse({
+    name: text(formData, "name"),
+    description: text(formData, "description"),
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid collection." };
+  const membership = user.memberships.find(
+    (item) => item.role === "COLLECTOR" && item.status === "ACTIVE",
+  );
+  if (!membership) return { error: "Collector organization membership is required." };
+  const collection = await prisma.collection.create({
+    data: {
+      name: parsed.data.name,
+      description: parsed.data.description,
+      organizationId: membership.organizationId,
+      ownerUserId: user.id,
+    },
+  });
+  revalidatePath("/dashboard");
+  redirect(`/collections/${collection.id}`);
+}
+
+export async function createVehicleAction(
+  _prev: { error?: string } | null,
+  formData: FormData,
+): Promise<{ error?: string }> {
+  const user = await requireUser();
+  const parsed = vehicleSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid vehicle." };
+  const vehicle = await createVehicle(user, parsed.data, correlationId());
+  revalidatePath("/dashboard");
+  redirect(`/vehicles/${vehicle.id}`);
+}
+
+export async function saveAcquisitionAction(
+  _prev: { error?: string } | null,
+  formData: FormData,
+): Promise<{ error?: string }> {
+  const user = await requireUser();
+  const parsed = acquisitionSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid acquisition." };
+  await recordAcquisition(user, parsed.data, correlationId());
+  revalidatePath(`/vehicles/${parsed.data.vehicleId}`);
+  return {};
+}
+
+export async function saveExpenseAction(
+  _prev: { error?: string } | null,
+  formData: FormData,
+): Promise<{ error?: string }> {
+  const user = await requireUser();
+  const parsed = expenseSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid expense." };
+  await recordExpense(user, parsed.data, correlationId());
+  revalidatePath(`/vehicles/${parsed.data.vehicleId}`);
+  return {};
+}
+
+export async function developValuationAction(
+  _prev: { error?: string } | null,
+  formData: FormData,
+): Promise<{ error?: string }> {
+  const user = await requireUser();
+  const parsed = valuationRequestSchema.safeParse({
+    vehicleId: text(formData, "vehicleId"),
+    intendedUse: text(formData, "intendedUse"),
+    intendedUsers: text(formData, "intendedUsers"),
+  });
+  if (!parsed.success)
+    return { error: parsed.error.issues[0]?.message ?? "Invalid valuation request." };
+  const valuation = await developVehicleValuation(user, parsed.data, correlationId());
+  const vehicle = await prisma.vehicle.findUnique({ where: { id: parsed.data.vehicleId } });
+  if (vehicle) await capturePortfolioSnapshot(vehicle.collectionId);
+  redirect(`/vehicles/${parsed.data.vehicleId}/valuations/${valuation.id}`);
+}
+
+export async function requestAppraisalAction(
+  _prev: { error?: string } | null,
+  formData: FormData,
+): Promise<{ error?: string }> {
+  const user = await requireUser();
+  const parsed = appraisalRequestSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success)
+    return { error: parsed.error.issues[0]?.message ?? "Invalid appraisal request." };
+  const assignment = await requestAppraisal(user, parsed.data, correlationId());
+  redirect(`/appraisals/${assignment.id}`);
+}
+
+export async function acceptAssignmentAction(assignmentId: string) {
+  const user = await requireUser();
+  await acceptAssignment(user, assignmentId, correlationId());
+  revalidatePath(`/assignments/${assignmentId}`);
+}
+
+export async function recordInspectionAction(
+  _prev: { error?: string } | null,
+  formData: FormData,
+): Promise<{ error?: string }> {
+  const user = await requireUser();
+  await recordInspection(
+    user,
+    {
+      assignmentId: text(formData, "assignmentId"),
+      type: text(formData, "type") === "PHYSICAL" ? "PHYSICAL" : "REMOTE_DOCUMENTED",
+      inspectedAt: text(formData, "inspectedAt"),
+      location: text(formData, "location"),
+      notes: text(formData, "notes"),
+      collectorAcknowledged: formData.get("collectorAcknowledged") === "on",
+    },
+    correlationId(),
+  );
+  revalidatePath(`/assignments/${text(formData, "assignmentId")}`);
+  return {};
+}
+
+export async function draftReportAction(assignmentId: string) {
+  const user = await requireUser();
+  const report = await buildDraftReport(user, assignmentId, correlationId());
+  redirect(`/reports/${report.id}`);
+}
+
+export async function signReportAction(reportId: string) {
+  const user = await requireUser();
+  await signReport(user, reportId, correlationId());
+  revalidatePath(`/reports/${reportId}`);
+}
+
+export async function shareReportAction(
+  _prev: { error?: string; url?: string } | null,
+  formData: FormData,
+): Promise<{ error?: string; url?: string }> {
+  const user = await requireUser();
+  const parsed = shareReportSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid share." };
+  const hdrs = await headers();
+  const ip = hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
+  const result = await shareReport(user, parsed.data, ip, correlationId());
+  revalidatePath(`/reports/${parsed.data.reportId}`);
+  return { url: result.url };
+}
+
+export async function revokeShareAction(shareId: string, reportId: string) {
+  const user = await requireUser();
+  await revokeShare(user, shareId, correlationId());
+  revalidatePath(`/reports/${reportId}`);
+}
+
+export async function lenderDecisionAction(
+  _prev: { error?: string } | null,
+  formData: FormData,
+): Promise<{ error?: string }> {
+  const user = await requireUser();
+  const parsed = lenderDecisionSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid decision." };
+  await recordLenderDecision(user, parsed.data, correlationId());
+  revalidatePath(`/lender/shares/${text(formData, "token")}`);
+  return {};
+}
+
+export async function importMarketJsonAction(
+  _prev: { error?: string; ok?: string } | null,
+  formData: FormData,
+): Promise<{ error?: string; ok?: string }> {
+  const user = await requireUser();
+  if (!user.memberships.some((item) => item.role === "ADMINISTRATOR")) {
+    return { error: "Only administrators can import authorized market files." };
+  }
+  const raw = text(formData, "json");
+  try {
+    const parsed = JSON.parse(raw) as { data?: OldCarsAuctionRecord[] } | OldCarsAuctionRecord[];
+    const result = await importAuthorizedJson(parsed, user.id, correlationId());
+    return { ok: `Imported ${result.imported} records; skipped ${result.skipped} duplicates.` };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Import failed." };
+  }
+}
+
+export async function uploadDocumentAction(
+  _prev: { error?: string } | null,
+  formData: FormData,
+): Promise<{ error?: string }> {
+  const user = await requireUser();
+  const vehicleId = text(formData, "vehicleId");
+  const kind = text(formData, "kind") || "OTHER";
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) return { error: "Select a file." };
+  const vehicle = await prisma.vehicle.findUnique({
+    where: { id: vehicleId },
+    include: { collection: true },
+  });
+  if (!vehicle) return { error: "Vehicle not found." };
+  if (!canMutateCollection(user, vehicle.collection)) return { error: "Not authorized." };
+  const allowed = ["application/pdf", "image/jpeg", "image/png", "image/webp", "image/heic"];
+  if (!allowed.includes(file.type)) return { error: "File type is not allowed." };
+  if (file.size > 26_214_400) return { error: "File exceeds the 25 MB limit." };
+  const bytes = Buffer.from(await file.arrayBuffer());
+  const scan = await getMalwareScanner().scan(bytes, file.name);
+  const stored = await getDocumentStorage().put(
+    `${vehicle.collectionId}/${vehicle.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`,
+    bytes,
+    file.type,
+  );
+  const sensitivity = ["TITLE", "BILL_OF_SALE", "REGISTRATION"].includes(kind)
+    ? "SENSITIVE"
+    : "STANDARD";
+  const doc = await prisma.document.create({
+    data: {
+      vehicleId,
+      uploadedById: user.id,
+      kind: kind as never,
+      sensitivity,
+      fileName: file.name,
+      contentType: file.type,
+      byteSize: stored.byteSize,
+      storageKey: stored.key,
+      sha256: stored.sha256,
+      malwareScanStatus: scan.status,
+      malwareScanAt: scan.scannedAt,
+    },
+  });
+  await writeAudit({
+    actorUserId: user.id,
+    organizationId: vehicle.collection.organizationId,
+    action: "document.uploaded",
+    subjectType: "Document",
+    subjectId: doc.id,
+    newValue: { kind, sha256: stored.sha256, malwareScanStatus: scan.status },
+    source: "documents.upload",
+    correlationId: correlationId(),
+  });
+  revalidatePath(`/vehicles/${vehicleId}/documents`);
+  return {};
+}

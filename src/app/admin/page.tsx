@@ -1,0 +1,78 @@
+import { AppShell } from "@/components/layout/shell";
+import { Card, EmptyState } from "@/components/ui/primitives";
+import { requireUser } from "@/server/auth/require";
+import { hasRole } from "@/server/rbac";
+import { prisma } from "@/server/db";
+import { AdminImportForm } from "@/components/admin/import-form";
+import Link from "next/link";
+
+export default async function AdminPage() {
+  const user = await requireUser();
+  if (!hasRole(user, "ADMINISTRATOR")) {
+    return (
+      <AppShell user={user}>
+        <EmptyState title="Administrator role required">
+          Administration is limited to platform administrators.
+        </EmptyState>
+      </AppShell>
+    );
+  }
+  const [users, providers, methodologies, recentAudit] = await Promise.all([
+    prisma.user.count(),
+    prisma.marketProvider.findMany(),
+    prisma.methodologyVersion.findMany(),
+    prisma.auditEvent.findMany({ orderBy: { timestamp: "desc" }, take: 12 }),
+  ]);
+  return (
+    <AppShell user={user}>
+      <h1 className="display text-4xl">Administration</h1>
+      <div className="mt-6 grid gap-4 md:grid-cols-3">
+        <Card>
+          <p className="text-muted text-xs uppercase">Users</p>
+          <p className="tabular mt-2 text-3xl">{users}</p>
+        </Card>
+        <Card>
+          <p className="text-muted text-xs uppercase">Data sources</p>
+          <ul className="mt-2 text-sm">
+            {providers.map((provider) => (
+              <li key={provider.id}>
+                {provider.name}: {provider.health}
+              </li>
+            ))}
+          </ul>
+        </Card>
+        <Card>
+          <p className="text-muted text-xs uppercase">Methodologies</p>
+          <ul className="mt-2 text-sm">
+            {methodologies.map((item) => (
+              <li key={item.id}>
+                {item.slug} {item.version}
+              </li>
+            ))}
+          </ul>
+        </Card>
+      </div>
+      <Card className="mt-6">
+        <h2 className="display text-2xl">Authorized market import</h2>
+        <p className="text-muted mt-2 text-sm">
+          Paste JSON from an authorized provider export. This does not scrape websites.
+        </p>
+        <AdminImportForm />
+      </Card>
+      <Card className="mt-6">
+        <h2 className="display text-2xl">Recent audit events</h2>
+        <ul className="mt-3 space-y-2 text-sm">
+          {recentAudit.map((event) => (
+            <li key={event.id}>
+              {event.timestamp.toISOString()} · {event.action} · {event.subjectType}{" "}
+              {event.subjectId}
+            </li>
+          ))}
+        </ul>
+        <Link href="/admin/audit" className="mt-3 inline-block text-sm underline">
+          Full audit log
+        </Link>
+      </Card>
+    </AppShell>
+  );
+}
