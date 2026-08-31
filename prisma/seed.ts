@@ -75,7 +75,7 @@ async function main() {
         name: "Demo Administrator",
         role: "ADMINISTRATOR" as const,
         orgType: "PLATFORM" as const,
-        org: "MotorLedger Platform",
+        org: "Tickerauto Platform",
       },
     ];
     for (const spec of specs) {

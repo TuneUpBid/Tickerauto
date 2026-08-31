@@ -1,6 +1,6 @@
 # Lender methodology review checklist
 
-Use this checklist when a participating lender reviews MotorLedger. Approval is an explicit `LenderDecision` of `ACCEPTED`. Do not infer approval from silence, downloads, or portal visits.
+Use this checklist when a participating lender reviews Tickerauto. Approval is an explicit `LenderDecision` of `ACCEPTED`. Do not infer approval from silence, downloads, or portal visits.
 
 ## Process
 
@@ -26,4 +26,4 @@ Use this checklist when a participating lender reviews MotorLedger. Approval is 
 - Who at the institution is authorized to record acceptance?
 - What workfile retention is required?
 
-MotorLedger does not determine collateral eligibility or loan-to-value.
+Tickerauto does not determine collateral eligibility or loan-to-value.

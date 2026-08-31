@@ -17,12 +17,12 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MotorLedger",
+  title: "Tickerauto",
   description:
     "Collector-car portfolio tracking, source-backed market estimates, and lender-facing collateral documentation.",
   appleWebApp: {
     capable: true,
-    title: "MotorLedger",
+    title: "Tickerauto",
     statusBarStyle: "black-translucent",
   },
   formatDetection: {

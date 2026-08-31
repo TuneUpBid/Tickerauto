@@ -1,6 +1,6 @@
 # Architecture and valuation methodology
 
-MotorLedger is a Next.js application with a PostgreSQL database. Domain calculations live in `src/domain` and do not depend on the web framework. Server actions and services in `src/server` enforce authentication, tenancy, and audit. External vendors are hidden behind interfaces in `src/server/providers`.
+Tickerauto is a Next.js application with a PostgreSQL database. Domain calculations live in `src/domain` and do not depend on the web framework. Server actions and services in `src/server` enforce authentication, tenancy, and audit. External vendors are hidden behind interfaces in `src/server/providers`.
 
 ## Request path
 

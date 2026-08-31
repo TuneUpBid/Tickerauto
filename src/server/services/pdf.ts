@@ -20,7 +20,7 @@ export async function renderReportPdf(report: {
     doc.on("end", () => resolve(Buffer.concat(chunks)));
   });
 
-  doc.fontSize(22).text("MotorLedger");
+  doc.fontSize(22).text(getConfig().appName);
   doc.moveDown(0.3);
   doc.fontSize(16).text(report.title);
   doc.moveDown();

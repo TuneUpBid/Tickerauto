@@ -88,7 +88,7 @@ export async function registerAction(
   const verifyUrl = `${getConfig().baseUrl}/verify-email?token=${token}`;
   await getEmailProvider().send({
     to: user.email,
-    subject: "Verify your MotorLedger email",
+    subject: `Verify your ${getConfig().appName} email`,
     text: `Verify your email by opening: ${verifyUrl}\nThis link expires in 24 hours.`,
   });
   await writeAudit({
@@ -220,7 +220,7 @@ export async function forgotPasswordAction(
     });
     await getEmailProvider().send({
       to: user.email,
-      subject: "Reset your MotorLedger password",
+      subject: `Reset your ${getConfig().appName} password`,
       text: `Reset your password: ${getConfig().baseUrl}/reset-password?token=${token}`,
     });
   }

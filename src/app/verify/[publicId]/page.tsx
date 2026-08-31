@@ -17,7 +17,7 @@ export default async function VerifyPage({ params }: { params: Promise<{ publicI
   }
   return (
     <main className="mx-auto max-w-xl px-4 py-16">
-      <p className="display text-sm">MotorLedger verification</p>
+      <p className="kicker">Tickerauto verification</p>
       <h1 className="display mt-3 text-4xl">{report.publicId}</h1>
       <Card className="mt-6 space-y-2 text-sm">
         <p>Status: {report.status}</p>

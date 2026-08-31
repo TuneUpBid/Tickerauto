@@ -8,7 +8,7 @@ function required(name: string, fallback?: string): string {
 
 export function getConfig() {
   return {
-    appName: process.env.APP_NAME ?? "MotorLedger",
+    appName: process.env.APP_NAME ?? "Tickerauto",
     appEnv: process.env.APP_ENV ?? "development",
     demoMode: process.env.APP_DEMO_MODE === "true" || process.env.APP_ENV === "demonstration",
     baseUrl: process.env.APP_BASE_URL ?? "http://localhost:3000",

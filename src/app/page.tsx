@@ -103,7 +103,7 @@ export default function HomePage() {
           <div className="rule" />
         </section>
         <p className="text-muted mt-10 max-w-2xl text-sm leading-6">
-          MotorLedger does not make lending decisions. Market estimates are opinions from available
+          Tickerauto does not make lending decisions. Market estimates are opinions from available
           completed-sale evidence. A valuation becomes an appraisal only after a qualified
           independent appraiser completes and signs it.
         </p>

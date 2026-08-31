@@ -1,8 +1,6 @@
-# MotorLedger
+# Tickerauto
 
 Collector-car portfolio tracking, source-backed market estimates, independent appraisal workflow, and lender-facing collateral reporting.
-
-The product name is easy to rename. This repository was initialized as Tickerauto.
 
 ## What this release does
 
