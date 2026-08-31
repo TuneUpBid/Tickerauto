@@ -1,44 +1,46 @@
 @import "tailwindcss";
 
 /*
-  Printed-catalog surfaces. Dark is default. No decorative gradients,
-  no cream-and-brass luxury palette.
+  Catalog structure with the warmer night palette: charcoal, cream, brass.
+  Dark is default. Vermillion and flat black are not used as brand colors.
 */
 :root,
 .dark {
   color-scheme: dark;
-  --bg: #111111;
-  --bg-elevated: #111111;
-  --bg-muted: #1a1a1a;
-  --ink: #e8e8e4;
-  --muted: #8d8d88;
-  --line: #2f2f2c;
-  --accent: #d42b1f;
-  --accent-ink: #ffffff;
-  --up: #2f8a5b;
-  --down: #d42b1f;
-  --warn: #c9a227;
-  --focus: #e8e8e4;
+  --bg: #0c0b09;
+  --bg-elevated: #16130f;
+  --bg-muted: #211c16;
+  --ink: #f4ead8;
+  --muted: #b7a894;
+  --line: #3f362b;
+  --accent: #d4a15a;
+  --accent-ink: #1a140c;
+  --up: #7dbe9a;
+  --down: #e08a7c;
+  --warn: #e0c36a;
+  --focus: #d4a15a;
   --shadow-card: none;
   --radius: 0px;
+  --wash: rgba(212, 161, 90, 0.08);
 }
 
 .light {
   color-scheme: light;
-  --bg: #ecebe6;
-  --bg-elevated: #ecebe6;
-  --bg-muted: #e2e0d9;
-  --ink: #141414;
-  --muted: #5c5c57;
-  --line: #c4c2ba;
-  --accent: #c01f16;
-  --accent-ink: #ffffff;
-  --up: #1f6b45;
-  --down: #c01f16;
-  --warn: #8a6f12;
-  --focus: #141414;
+  --bg: #f4efe6;
+  --bg-elevated: #fffdf8;
+  --bg-muted: #ebe4d6;
+  --ink: #1b1712;
+  --muted: #6f6659;
+  --line: #d8cfbf;
+  --accent: #8a5a2b;
+  --accent-ink: #fffdf8;
+  --up: #2f6b4f;
+  --down: #9b3d32;
+  --warn: #8a6a1a;
+  --focus: #3d5a80;
   --shadow-card: none;
   --radius: 0px;
+  --wash: transparent;
 }
 
 @theme inline {
@@ -71,14 +73,16 @@ body {
 
 body {
   font-family: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
-  border-left: 3px solid var(--accent);
+  background:
+    radial-gradient(1000px 520px at 8% -12%, var(--wash), transparent 55%),
+    var(--bg);
 }
 
 input,
 select,
 textarea {
   font-size: 16px;
-  background: var(--bg);
+  background: var(--bg-elevated);
   color: var(--ink);
   border-radius: var(--radius);
 }
@@ -92,7 +96,7 @@ input:-webkit-autofill,
 textarea:-webkit-autofill,
 select:-webkit-autofill {
   -webkit-text-fill-color: var(--ink);
-  box-shadow: 0 0 0 1000px var(--bg) inset;
+  box-shadow: 0 0 0 1000px var(--bg-elevated) inset;
   caret-color: var(--ink);
 }
 
@@ -137,8 +141,8 @@ h3,
 }
 
 ::selection {
-  background: var(--accent);
-  color: var(--accent-ink);
+  background: color-mix(in srgb, var(--accent) 38%, transparent);
+  color: var(--ink);
 }
 
 .tabular {

@@ -8,7 +8,7 @@ import type {
 
 export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn("border-line bg-bg border p-4", className)} {...props} />
+    <div className={cn("border-line bg-bg-elevated border p-4", className)} {...props} />
   );
 }
 
@@ -21,7 +21,7 @@ export function Button({
 }) {
   const styles = {
     primary: "bg-accent text-accent-ink hover:opacity-90",
-    secondary: "border border-line bg-bg text-ink hover:bg-bg-muted",
+    secondary: "border border-line bg-bg-elevated text-ink hover:bg-bg-muted",
     danger: "bg-down text-white hover:opacity-90",
     ghost: "text-ink underline-offset-4 hover:underline",
   } as const;
