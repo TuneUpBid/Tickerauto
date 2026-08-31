@@ -21,7 +21,7 @@ export function AppShell({ user, children }: { user: CurrentUser; children: Reac
   ];
 
   return (
-    <div className="bg-bg text-ink min-h-screen pb-20 md:pb-0">
+    <div className="bg-bg text-ink min-h-screen pb-20 lg:pb-0">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4">
         Skip to content
       </a>
@@ -30,7 +30,7 @@ export function AppShell({ user, children }: { user: CurrentUser; children: Reac
           <Link href="/dashboard" className="display text-xl">
             MotorLedger
           </Link>
-          <div className="hidden md:block">
+          <div className="hidden lg:block">
             <AppNav links={links} />
           </div>
           <div className="flex items-center gap-2">
@@ -41,7 +41,7 @@ export function AppShell({ user, children }: { user: CurrentUser; children: Reac
                 Sign out
               </button>
             </form>
-            <details className="md:hidden">
+            <details className="lg:hidden">
               <summary className="border-line min-h-11 cursor-pointer list-none rounded-full border px-4 py-2 text-sm">
                 Menu
               </summary>
