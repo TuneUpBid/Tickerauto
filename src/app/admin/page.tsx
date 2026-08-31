@@ -4,6 +4,11 @@ import { requireUser } from "@/server/auth/require";
 import { hasRole } from "@/server/rbac";
 import { prisma } from "@/server/db";
 import { AdminImportForm } from "@/components/admin/import-form";
+import {
+  ProbeOldCarsDataButton,
+  RefreshOldCarsDataForm,
+} from "@/components/admin/old-cars-data-forms";
+import { getConfig } from "@/server/config";
 import Link from "next/link";
 
 export default async function AdminPage() {
@@ -17,6 +22,8 @@ export default async function AdminPage() {
       </AppShell>
     );
   }
+  const config = getConfig();
+  const keyConfigured = Boolean(config.market.oldCarsData.apiKey);
   const [users, providers, methodologies, recentAudit] = await Promise.all([
     prisma.user.count(),
     prisma.marketProvider.findMany(),
@@ -52,6 +59,29 @@ export default async function AdminPage() {
           </ul>
         </Card>
       </div>
+      <Card className="mt-6">
+        <h2 className="display text-2xl">Old Cars Data</h2>
+        <p className="text-muted mt-2 text-sm">
+          Official API {config.market.oldCarsData.baseUrl}. The key is read from{" "}
+          <code>OLD_CARS_DATA_API_KEY</code> and is never shown here.
+        </p>
+        <p className="mt-2 text-sm">
+          API key: {keyConfigured ? "configured" : "not configured"} · last health{" "}
+          {providers.find((item) => item.slug === "old-cars-data")?.health ?? "unknown"}
+        </p>
+        {providers.find((item) => item.slug === "old-cars-data")?.lastError ? (
+          <p className="text-muted mt-1 text-sm">
+            Last error: {providers.find((item) => item.slug === "old-cars-data")?.lastError}
+          </p>
+        ) : null}
+        <ProbeOldCarsDataButton />
+        <h3 className="display mt-6 text-xl">Authorized retrieval</h3>
+        <p className="text-muted mt-1 text-sm">
+          Completed sales only. Live bids and reserve-not-met results are stored with their true
+          status and are not used as sold prices.
+        </p>
+        <RefreshOldCarsDataForm />
+      </Card>
       <Card className="mt-6">
         <h2 className="display text-2xl">Authorized market import</h2>
         <p className="text-muted mt-2 text-sm">

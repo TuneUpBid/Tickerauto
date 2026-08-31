@@ -36,7 +36,7 @@ export function getConfig() {
     },
     market: {
       oldCarsData: {
-        baseUrl: process.env.OLD_CARS_DATA_API_BASE_URL,
+        baseUrl: process.env.OLD_CARS_DATA_API_BASE_URL || "https://api.oldcarsdata.com",
         apiKey: process.env.OLD_CARS_DATA_API_KEY,
       },
     },

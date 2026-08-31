@@ -3,7 +3,7 @@ import { mapOldCarsAuction, type OldCarsAuctionRecord } from "@/domain/market-ma
 import { writeAudit } from "../audit";
 import { prisma } from "../db";
 import { getJobQueue } from "../jobs/queue";
-import { getLiveMarketProvider } from "../providers/market";
+import { getLiveMarketProvider, getOldCarsDataClient } from "../providers/market";
 
 export async function ensureMarketProvider(slug: string, name: string, kind: string) {
   return prisma.marketProvider.upsert({
@@ -124,10 +124,11 @@ export async function refreshFromLiveProvider(query: {
   model: string;
   yearMin?: number;
   yearMax?: number;
+  actorUserId?: string | null;
 }) {
   const provider = getLiveMarketProvider();
   const result = await provider.searchCompleted({ ...query, status: "sold", limit: 40 });
-  await ensureMarketProvider(provider.slug, provider.name, "auction");
+  const record = await ensureMarketProvider(provider.slug, provider.name, "auction");
   if (!result.ok) {
     await prisma.marketProvider.update({
       where: { slug: provider.slug },
@@ -139,8 +140,44 @@ export async function refreshFromLiveProvider(query: {
     });
     return { ok: false as const, reason: result.reason };
   }
-  const imported = await importNormalizedRecords(result.records, null, `provider:${provider.slug}`);
+  const imported = await importNormalizedRecords(
+    result.records,
+    query.actorUserId ?? null,
+    `provider:${provider.slug}`,
+  );
+  await prisma.marketProvider.update({
+    where: { id: record.id },
+    data: { health: "HEALTHY", lastError: null, lastCheckedAt: new Date() },
+  });
   return { ok: true as const, ...imported, provider: provider.name };
+}
+
+export async function probeOldCarsDataConnection(actorUserId: string | null) {
+  const client = getOldCarsDataClient();
+  const result = await client.checkConnection();
+  const record = await ensureMarketProvider(client.slug, client.name, "auction");
+  await prisma.marketProvider.update({
+    where: { id: record.id },
+    data: {
+      health: result.authenticated ? "HEALTHY" : client.configured ? "UNAVAILABLE" : "UNCONFIGURED",
+      lastError: result.authenticated ? null : (result.reason ?? null),
+      lastCheckedAt: new Date(),
+    },
+  });
+  await writeAudit({
+    actorUserId,
+    action: "market.provider_probed",
+    subjectType: "MarketProvider",
+    subjectId: record.id,
+    newValue: {
+      publicCatalog: result.publicCatalog,
+      authenticated: result.authenticated,
+      makeCount: result.makeCount ?? null,
+    },
+    source: "market.probe",
+    correlationId: `probe:${client.slug}`,
+  });
+  return { ...result, configured: client.configured, baseUrl: client.baseUrl };
 }
 
 function statusToEnum(status: string) {

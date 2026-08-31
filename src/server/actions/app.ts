@@ -23,7 +23,11 @@ import {
   buildDraftReport,
   signReport,
 } from "../services/appraisal";
-import { importAuthorizedJson } from "../services/market";
+import {
+  importAuthorizedJson,
+  probeOldCarsDataConnection,
+  refreshFromLiveProvider,
+} from "../services/market";
 import { recordAcquisition, recordExpense, createVehicle } from "../services/vehicles";
 import { developVehicleValuation } from "../services/valuation";
 import { recordLenderDecision, revokeShare, shareReport } from "../services/sharing";
@@ -205,6 +209,48 @@ export async function lenderDecisionAction(
   await recordLenderDecision(user, parsed.data, correlationId());
   revalidatePath(`/lender/shares/${text(formData, "token")}`);
   return {};
+}
+
+export async function probeOldCarsDataAction(): Promise<{ error?: string; ok?: string }> {
+  const user = await requireUser();
+  if (!user.memberships.some((item) => item.role === "ADMINISTRATOR")) {
+    return { error: "Only administrators can test data-source credentials." };
+  }
+  const result = await probeOldCarsDataConnection(user.id);
+  if (!result.authenticated) {
+    return {
+      error: result.reason ?? "Old Cars Data is reachable but the API key was not accepted.",
+    };
+  }
+  revalidatePath("/admin");
+  return {
+    ok: `Connected to ${result.baseUrl}. Public catalog has ${result.makeCount ?? 0} makes. Authenticated completed-sale search succeeded.`,
+  };
+}
+
+export async function refreshOldCarsDataAction(
+  _prev: { error?: string; ok?: string } | null,
+  formData: FormData,
+): Promise<{ error?: string; ok?: string }> {
+  const user = await requireUser();
+  const make = text(formData, "make");
+  const model = text(formData, "model");
+  if (!make || !model) return { error: "Make and model are required." };
+  const yearMin = text(formData, "yearMin");
+  const yearMax = text(formData, "yearMax");
+  const result = await refreshFromLiveProvider({
+    make,
+    model,
+    yearMin: yearMin ? Number(yearMin) : undefined,
+    yearMax: yearMax ? Number(yearMax) : undefined,
+    actorUserId: user.id,
+  });
+  if (!result.ok) return { error: result.reason };
+  revalidatePath("/market");
+  revalidatePath("/admin");
+  return {
+    ok: `Retrieved ${result.imported} new completed sales from ${result.provider}; skipped ${result.skipped} duplicates.`,
+  };
 }
 
 export async function importMarketJsonAction(

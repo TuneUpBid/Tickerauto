@@ -6,11 +6,11 @@ All vendors sit behind interfaces. If credentials are missing, the UI shows the 
 
 Interface: `src/server/providers/market.ts`
 
-| Provider                | Status in this release                                                         |
-| ----------------------- | ------------------------------------------------------------------------------ |
-| Old Cars Data HTTP      | Implemented; requires `OLD_CARS_DATA_API_BASE_URL` and `OLD_CARS_DATA_API_KEY` |
-| Authorized JSON import  | Implemented for administrators                                                 |
-| Black Book / J.D. Power | Interface and registry only                                                    |
+| Provider                | Status in this release                                                                   |
+| ----------------------- | ---------------------------------------------------------------------------------------- |
+| Old Cars Data HTTP      | Official REST client at `https://api.oldcarsdata.com`. Requires `OLD_CARS_DATA_API_KEY`. |
+| Authorized JSON import  | Implemented for administrators                                                           |
+| Black Book / J.D. Power | Interface and registry only                                                              |
 
 Completed auction records are normalized to:
 
@@ -30,7 +30,27 @@ Rules:
 
 ### Old Cars Data
 
-When an HTTP API is configured, `OldCarsDataHttpProvider` requests completed auctions by make, model, and year. During this build, authorized Old Cars Data tools were used only to learn the record shape and to store a **test/demonstration fixture** of real completed and reserve-not-met listings. That fixture is not a production seed.
+Official docs: https://oldcarsdata.com/docs
+
+| Item            | Value                                                                                       |
+| --------------- | ------------------------------------------------------------------------------------------- |
+| Base URL        | `https://api.oldcarsdata.com` (override with `OLD_CARS_DATA_API_BASE_URL` only if directed) |
+| Auth            | `Authorization: Bearer $OLD_CARS_DATA_API_KEY`                                              |
+| Completed sales | `GET /auctions?status=sold`                                                                 |
+| Live auctions   | `GET /auctions/live` (stored as live, never as sold)                                        |
+| Public catalog  | `GET /makes`, `GET /models` (no key; does not count toward plan quota)                      |
+| Burst limit     | HTTP 429 + `Retry-After`; the client retries with a bounded backoff                         |
+
+Set the key in the environment or secret manager. Do not commit it.
+
+```bash
+OLD_CARS_DATA_API_BASE_URL=https://api.oldcarsdata.com
+OLD_CARS_DATA_API_KEY=your-key
+```
+
+Administrators can test the connection and pull completed sales from **Admin**. Collectors can retrieve the same way from **Comparables**. Draft valuations call the live provider when the key is present; if the call fails, the last stored verified sales are preserved and marked stale.
+
+A recorded fixture of real completed and reserve-not-met listings remains in `tests/fixtures` for automated tests only. That fixture is not a production seed.
 
 Import:
 

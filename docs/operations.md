@@ -40,7 +40,7 @@ npm run build
 - Terminate TLS in front of the Next.js process.
 - Set `APP_ENV=production` and inject secrets from a manager.
 - Use `STORAGE_PROVIDER=s3` with a private bucket.
-- Configure email, malware scanning, and Old Cars Data (or another licensed feed) before treating the environment as lender-facing.
+- Configure email, malware scanning, and `OLD_CARS_DATA_API_KEY` (see `docs/data-provider-integration.md`) before treating the environment as lender-facing.
 - Have appraisal and legal counsel replace draft certification language.
 - Back up PostgreSQL and the object store. Audit events and signed reports must not be rewritten in place.
 

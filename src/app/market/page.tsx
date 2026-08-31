@@ -1,9 +1,11 @@
+import { RefreshOldCarsDataForm } from "@/components/admin/old-cars-data-forms";
 import { AppShell } from "@/components/layout/shell";
 import { Card } from "@/components/ui/primitives";
 import { formatMoney } from "@/domain/money";
 import { formatDate } from "@/lib/format";
 import { requireUser } from "@/server/auth/require";
 import { prisma } from "@/server/db";
+import { getConfig } from "@/server/config";
 
 export default async function MarketPage({
   searchParams,
@@ -12,6 +14,7 @@ export default async function MarketPage({
 }) {
   const user = await requireUser();
   const params = await searchParams;
+  const apiConfigured = Boolean(getConfig().market.oldCarsData.apiKey);
   const transactions = await prisma.marketTransaction.findMany({
     where: {
       ...(params.make ? { make: { equals: params.make, mode: "insensitive" } } : {}),
@@ -44,6 +47,15 @@ export default async function MarketPage({
           Filter
         </button>
       </form>
+      <Card className="mt-6">
+        <h2 className="display text-2xl">Retrieve from Old Cars Data</h2>
+        <p className="text-muted mt-2 text-sm">
+          {apiConfigured
+            ? "Uses your configured Old Cars Data API key. This counts against the plan query limit."
+            : "OLD_CARS_DATA_API_KEY is not set. Retrieval will report that the provider is unavailable and will not invent prices."}
+        </p>
+        <RefreshOldCarsDataForm />
+      </Card>
       <Card className="mt-6 overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead className="text-muted text-xs uppercase">

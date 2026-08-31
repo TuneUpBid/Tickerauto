@@ -10,6 +10,8 @@ export interface OldCarsAuctionRecord {
   year?: number | null;
   ocd_make_name?: string | null;
   ocd_model_name?: string | null;
+  listing_make?: string | null;
+  listing_model?: string | null;
   vin?: string | null;
   auction_end_at?: string | null;
   auction_end_date?: string | null;
@@ -106,8 +108,8 @@ export function mapOldCarsAuction(
     saleStatus: status,
     reserveNotMet: status === "reserve_not_met",
     year: record.year ?? null,
-    make: record.ocd_make_name ?? null,
-    model: record.ocd_model_name ?? null,
+    make: record.ocd_make_name ?? record.listing_make ?? null,
+    model: record.ocd_model_name ?? record.listing_model ?? null,
     bodyStyle: record.body_style ?? null,
     engine: record.engine ?? null,
     transmission: record.transmission ?? null,
