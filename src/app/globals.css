@@ -1,6 +1,30 @@
 @import "tailwindcss";
 
-:root {
+/*
+  Dark is the default surface. Tokens live on :root so the first paint is
+  night even before next-themes hydrates. .light is the optional parchment mode.
+*/
+:root,
+.dark {
+  color-scheme: dark;
+  --bg: #0c0b09;
+  --bg-elevated: #16130f;
+  --bg-muted: #211c16;
+  --ink: #f4ead8;
+  --muted: #b7a894;
+  --line: #3f362b;
+  --accent: #d4a15a;
+  --accent-ink: #1a140c;
+  --up: #7dbe9a;
+  --down: #e08a7c;
+  --warn: #e0c36a;
+  --focus: #d4a15a;
+  --shadow-card: 0 1px 0 rgba(243, 234, 216, 0.04), 0 18px 40px rgba(0, 0, 0, 0.38);
+  --wash: rgba(212, 161, 90, 0.09);
+}
+
+.light {
+  color-scheme: light;
   --bg: #f4efe6;
   --bg-elevated: #fffdf8;
   --bg-muted: #ebe4d6;
@@ -13,21 +37,8 @@
   --down: #9b3d32;
   --warn: #8a6a1a;
   --focus: #3d5a80;
-}
-
-.dark {
-  --bg: #12100d;
-  --bg-elevated: #1c1914;
-  --bg-muted: #241f19;
-  --ink: #f0e6d4;
-  --muted: #b3a48e;
-  --line: #3a342b;
-  --accent: #c4925a;
-  --accent-ink: #1b1712;
-  --up: #7dbe9a;
-  --down: #e08a7c;
-  --warn: #e0c36a;
-  --focus: #8fb0d6;
+  --shadow-card: 0 1px 0 rgba(27, 23, 18, 0.04);
+  --wash: transparent;
 }
 
 @theme inline {
@@ -60,12 +71,31 @@ body {
 
 body {
   font-family: var(--font-source-sans), ui-sans-serif, system-ui, sans-serif;
+  background:
+    radial-gradient(1000px 520px at 8% -12%, var(--wash), transparent 55%),
+    radial-gradient(800px 420px at 100% 0%, rgba(125, 190, 154, 0.04), transparent 46%),
+    var(--bg);
 }
 
 input,
 select,
 textarea {
   font-size: 16px;
+  background: var(--bg-elevated);
+  color: var(--ink);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+}
+
+input:-webkit-autofill,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: var(--ink);
+  box-shadow: 0 0 0 1000px var(--bg-elevated) inset;
+  caret-color: var(--ink);
 }
 
 button,
@@ -84,6 +114,11 @@ h3,
 :focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 2px;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 38%, transparent);
+  color: var(--ink);
 }
 
 .tabular {

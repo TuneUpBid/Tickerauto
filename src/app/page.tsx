@@ -1,11 +1,13 @@
 import Link from "next/link";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 
 export default function HomePage() {
   return (
-    <div className="bg-bg min-h-screen">
+    <div className="min-h-screen">
       <header className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-6">
         <p className="display text-2xl">MotorLedger</p>
-        <div className="flex shrink-0 gap-2 text-sm">
+        <div className="flex shrink-0 items-center gap-2 text-sm">
+          <ThemeToggle compact />
           <Link href="/login" className="border-line inline-flex min-h-11 items-center rounded-full border px-4 py-2">
             Sign in
           </Link>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { verifyEmailAction } from "@/server/actions/auth";
+import { AuthBrand } from "@/components/layout/auth-brand";
 
 export default async function VerifyEmailPage({
   searchParams,
@@ -14,7 +15,8 @@ export default async function VerifyEmailPage({
   }
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4">
-      <h1 className="display text-3xl">Verify email</h1>
+      <AuthBrand />
+      <h1 className="display mt-8 text-3xl">Verify email</h1>
       <p className="text-muted mt-4 text-sm">{message}</p>
       {params.email ? <p className="mt-2 text-sm">Sent to {params.email}</p> : null}
       <Link href="/login" className="mt-6 text-sm underline">

@@ -2,16 +2,19 @@
 
 import { useTheme } from "next-themes";
 
-export function ThemeToggle() {
-  const { resolvedTheme, setTheme } = useTheme();
+export function ThemeToggle({ compact = false }: { compact?: boolean }) {
+  const { resolvedTheme, theme, setTheme } = useTheme();
+  const isDark = (resolvedTheme ?? theme ?? "dark") !== "light";
+
   return (
     <button
       type="button"
-      className="border-line rounded-full border px-3 py-1 text-xs"
-      onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-      aria-label="Toggle color theme"
+      className="border-line text-ink inline-flex min-h-11 items-center rounded-full border px-3 text-sm"
+      onClick={() => setTheme(isDark ? "light" : "dark")}
+      aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
+      suppressHydrationWarning
     >
-      Theme
+      {compact ? (isDark ? "Light" : "Dark") : isDark ? "Light theme" : "Dark theme"}
     </button>
   );
 }

@@ -32,9 +32,16 @@ export function PortfolioChart({
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" />
-          <XAxis dataKey="date" tick={{ fontSize: 12 }} />
-          <YAxis tick={{ fontSize: 12 }} />
+          <XAxis dataKey="date" tick={{ fontSize: 12, fill: "var(--muted)" }} stroke="var(--line)" />
+          <YAxis tick={{ fontSize: 12, fill: "var(--muted)" }} stroke="var(--line)" />
           <Tooltip
+            contentStyle={{
+              background: "var(--bg-elevated)",
+              border: "1px solid var(--line)",
+              borderRadius: 12,
+              color: "var(--ink)",
+            }}
+            labelStyle={{ color: "var(--muted)" }}
             formatter={(value, _name, props) => [
               value === null || value === undefined
                 ? "Insufficient verified data"

@@ -35,13 +35,13 @@ export default async function MarketPage({
           name="make"
           defaultValue={params.make}
           placeholder="Make"
-          className="border-line rounded-xl border px-3 py-2"
+          className="border-line bg-bg-elevated text-ink min-h-11 rounded-xl border px-3 py-2 text-base"
         />
         <input
           name="model"
           defaultValue={params.model}
           placeholder="Model"
-          className="border-line rounded-xl border px-3 py-2"
+          className="border-line bg-bg-elevated text-ink min-h-11 rounded-xl border px-3 py-2 text-base"
         />
         <button className="bg-accent text-accent-ink rounded-full px-4 py-2" type="submit">
           Filter

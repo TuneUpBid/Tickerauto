@@ -1,11 +1,15 @@
 import Link from "next/link";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 
 export default function DisclosuresPage() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-16">
-      <p className="display text-sm">
-        <Link href="/">MotorLedger</Link>
-      </p>
+      <div className="flex items-center justify-between gap-3">
+        <p className="display text-sm">
+          <Link href="/">MotorLedger</Link>
+        </p>
+        <ThemeToggle compact />
+      </div>
       <h1 className="display mt-6 text-4xl">Disclosures</h1>
       <ul className="text-muted mt-8 space-y-4 text-sm leading-7">
         <li>

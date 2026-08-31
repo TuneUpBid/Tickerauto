@@ -43,6 +43,13 @@ export default async function SettingsPage() {
           </ul>
         </Card>
         <Card>
+          <h2 className="display text-2xl">Appearance</h2>
+          <p className="text-muted mt-2 text-sm">
+            Dark is the standard MotorLedger theme. Use the header control to switch to the
+            parchment light theme; the choice is stored on this device only.
+          </p>
+        </Card>
+        <Card>
           <h2 className="display text-2xl">Privacy</h2>
           <p className="text-muted mt-2 text-sm">
             Account export and deletion are available as administrator-assisted workflows in this

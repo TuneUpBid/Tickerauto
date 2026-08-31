@@ -25,7 +25,7 @@ export function AppShell({ user, children }: { user: CurrentUser; children: Reac
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4">
         Skip to content
       </a>
-      <header className="border-line bg-bg-elevated sticky top-0 z-20 border-b">
+      <header className="border-line bg-bg-elevated/90 sticky top-0 z-20 border-b backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
           <Link href="/dashboard" className="display text-xl">
             MotorLedger
@@ -34,7 +34,7 @@ export function AppShell({ user, children }: { user: CurrentUser; children: Reac
             <AppNav links={links} />
           </div>
           <div className="flex items-center gap-2">
-            <ThemeToggle />
+            <ThemeToggle compact />
             <span className="text-muted hidden max-w-40 truncate text-xs lg:inline">{user.email}</span>
             <form action={logoutAction}>
               <button className="text-muted hover:text-ink min-h-11 px-2 text-sm" type="submit">

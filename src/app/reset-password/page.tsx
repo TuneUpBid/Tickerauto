@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { resetPasswordAction } from "@/server/actions/auth";
 import { Button, Field, Input } from "@/components/ui/primitives";
 import { FormStatus } from "@/components/forms/form-status";
+import { AuthBrand } from "@/components/layout/auth-brand";
 import { Suspense } from "react";
 
 function ResetForm() {
@@ -30,7 +31,8 @@ function ResetForm() {
 export default function ResetPasswordPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4">
-      <h1 className="display text-3xl">Choose a new password</h1>
+      <AuthBrand />
+      <h1 className="display mt-8 text-3xl">Choose a new password</h1>
       <Suspense>
         <ResetForm />
       </Suspense>
