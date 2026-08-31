@@ -44,7 +44,7 @@ export default async function DashboardPage() {
     <AppShell user={user}>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-muted text-xs tracking-wide uppercase">{collection.name}</p>
+          <p className="kicker">{collection.name}</p>
           <h1 className="display text-4xl">Portfolio</h1>
         </div>
         <div className="flex gap-2">
@@ -152,7 +152,7 @@ export default async function DashboardPage() {
         </div>
         <div className="mt-4 overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="text-muted text-xs tracking-wide uppercase">
+            <thead className="kicker">
               <tr>
                 <th className="py-2">Vehicle</th>
                 <th>Estimate</th>

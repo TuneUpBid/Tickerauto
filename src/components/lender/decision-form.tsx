@@ -8,7 +8,7 @@ import { FormStatus } from "@/components/forms/form-status";
 export function LenderDecisionForm({ shareId, token }: { shareId: string; token: string }) {
   const [state, action, pending] = useActionState(lenderDecisionAction, null);
   return (
-    <form action={action} className="border-line mt-6 grid gap-3 rounded-2xl border p-4">
+    <form action={action} className="border-line mt-6 grid gap-3 border p-4">
       <h2 className="display text-2xl">Record an explicit decision</h2>
       <input type="hidden" name="shareId" value={shareId} />
       <input type="hidden" name="token" value={token} />

@@ -45,8 +45,8 @@ export default async function SettingsPage() {
         <Card>
           <h2 className="display text-2xl">Appearance</h2>
           <p className="text-muted mt-2 text-sm">
-            Dark is the standard MotorLedger theme. Use the header control to switch to the
-            parchment light theme; the choice is stored on this device only.
+            Dark paper is the standard. Use the header control for light paper. The choice stays
+            on this device.
           </p>
         </Card>
         <Card>

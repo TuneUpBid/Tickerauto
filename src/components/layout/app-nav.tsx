@@ -15,7 +15,7 @@ export function AppNav({
           href={link.href}
           className={
             compact
-              ? "text-ink min-h-11 rounded-xl px-3 py-3 text-base"
+              ? "text-ink min-h-11 px-3 py-3 text-base"
               : "text-muted hover:text-ink inline-flex min-h-11 items-center"
           }
         >

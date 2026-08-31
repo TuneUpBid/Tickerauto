@@ -1,13 +1,11 @@
-import Link from "next/link";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { Wordmark } from "@/components/layout/wordmark";
 
 export default function DisclosuresPage() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-16">
       <div className="flex items-center justify-between gap-3">
-        <p className="display text-sm">
-          <Link href="/">MotorLedger</Link>
-        </p>
+        <Wordmark />
         <ThemeToggle compact />
       </div>
       <h1 className="display mt-6 text-4xl">Disclosures</h1>

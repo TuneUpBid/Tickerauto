@@ -28,7 +28,7 @@ export function AssignmentActions({
           Accept assignment
         </Button>
       </form>
-      <form action={action} className="border-line grid gap-3 rounded-2xl border p-4">
+      <form action={action} className="border-line grid gap-3 border p-4">
         <h2 className="display text-2xl">Inspection</h2>
         <input type="hidden" name="assignmentId" value={assignmentId} />
         <Field label="Type">

@@ -1,8 +1,8 @@
-import Link from "next/link";
 import { logoutAction } from "@/server/actions/auth";
 import type { CurrentUser } from "@/server/auth/session";
 import { ThemeToggle } from "./theme-toggle";
 import { AppNav } from "./app-nav";
+import { Wordmark } from "./wordmark";
 
 export function AppShell({ user, children }: { user: CurrentUser; children: React.ReactNode }) {
   const role = user.memberships.find((item) => item.status === "ACTIVE")?.role ?? "COLLECTOR";
@@ -25,34 +25,34 @@ export function AppShell({ user, children }: { user: CurrentUser; children: Reac
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4">
         Skip to content
       </a>
-      <header className="border-line bg-bg-elevated/90 sticky top-0 z-20 border-b backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
-          <Link href="/dashboard" className="display text-xl">
-            MotorLedger
-          </Link>
+      <header className="border-line bg-bg sticky top-0 z-20 border-b">
+        <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-4 py-3">
+          <Wordmark href="/dashboard" />
           <div className="hidden lg:block">
             <AppNav links={links} />
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle compact />
-            <span className="text-muted hidden max-w-40 truncate text-xs lg:inline">{user.email}</span>
+            <span className="text-muted hidden max-w-40 truncate font-mono text-[11px] lg:inline">
+              {user.email}
+            </span>
             <form action={logoutAction}>
               <button className="text-muted hover:text-ink min-h-11 px-2 text-sm" type="submit">
                 Sign out
               </button>
             </form>
             <details className="lg:hidden">
-              <summary className="border-line min-h-11 cursor-pointer list-none rounded-full border px-4 py-2 text-sm">
+              <summary className="border-line min-h-11 cursor-pointer list-none border px-3 py-2 text-sm">
                 Menu
               </summary>
-              <div className="border-line bg-bg-elevated absolute top-full right-4 mt-2 w-56 rounded-2xl border p-2 shadow-lg">
+              <div className="border-line bg-bg absolute top-full right-4 mt-0 w-56 border p-1">
                 <AppNav links={links} compact />
               </div>
             </details>
           </div>
         </div>
       </header>
-      <main id="main" className="mx-auto w-full max-w-6xl px-4 py-6 md:py-8">
+      <main id="main" className="mx-auto w-full max-w-5xl px-4 py-6 md:py-8">
         {children}
       </main>
     </div>

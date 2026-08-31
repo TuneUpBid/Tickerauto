@@ -26,7 +26,7 @@ export function ReportActions({
           <Button type="submit">Sign as independent appraiser</Button>
         </form>
       ) : (
-        <form action={action} className="border-line grid gap-3 rounded-2xl border p-4">
+        <form action={action} className="border-line grid gap-3 border p-4">
           <h2 className="display text-2xl">Share with a lender</h2>
           <input type="hidden" name="reportId" value={reportId} />
           <Field label="Expires in days">

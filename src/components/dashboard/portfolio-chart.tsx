@@ -38,7 +38,7 @@ export function PortfolioChart({
             contentStyle={{
               background: "var(--bg-elevated)",
               border: "1px solid var(--line)",
-              borderRadius: 12,
+              borderRadius: 0,
               color: "var(--ink)",
             }}
             labelStyle={{ color: "var(--muted)" }}
