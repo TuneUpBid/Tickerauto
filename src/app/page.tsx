@@ -3,13 +3,16 @@ import Link from "next/link";
 export default function HomePage() {
   return (
     <div className="bg-bg min-h-screen">
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-6">
+      <header className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-6">
         <p className="display text-2xl">MotorLedger</p>
-        <div className="flex gap-3 text-sm">
-          <Link href="/login" className="border-line rounded-full border px-4 py-2">
+        <div className="flex shrink-0 gap-2 text-sm">
+          <Link href="/login" className="border-line inline-flex min-h-11 items-center rounded-full border px-4 py-2">
             Sign in
           </Link>
-          <Link href="/register" className="bg-accent text-accent-ink rounded-full px-4 py-2">
+          <Link
+            href="/register"
+            className="bg-accent text-accent-ink inline-flex min-h-11 items-center rounded-full px-4 py-2"
+          >
             Create account
           </Link>
         </div>
@@ -20,7 +23,7 @@ export default function HomePage() {
             <p className="text-muted text-xs tracking-[0.2em] uppercase">
               Private collection ledgers
             </p>
-            <h1 className="display mt-4 text-5xl leading-tight md:text-6xl">
+            <h1 className="display mt-4 text-4xl leading-tight sm:text-5xl md:text-6xl">
               Evidence-backed values for cars that are not ticker symbols.
             </h1>
             <p className="text-muted mt-6 max-w-xl text-lg">
@@ -28,10 +31,16 @@ export default function HomePage() {
               appraisals, and lender-facing collateral packages — without inventing a market.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/register" className="bg-accent text-accent-ink rounded-full px-5 py-3">
+              <Link
+                href="/register"
+                className="bg-accent text-accent-ink inline-flex min-h-11 items-center rounded-full px-5 py-3"
+              >
                 Open a ledger
               </Link>
-              <Link href="/legal/disclosures" className="border-line rounded-full border px-5 py-3">
+              <Link
+                href="/legal/disclosures"
+                className="border-line inline-flex min-h-11 items-center rounded-full border px-5 py-3"
+              >
                 Read disclosures
               </Link>
             </div>

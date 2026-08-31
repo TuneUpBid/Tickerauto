@@ -34,7 +34,7 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-medium transition disabled:opacity-50",
+        "inline-flex min-h-11 items-center justify-center rounded-full px-4 py-2 text-sm font-medium transition disabled:opacity-50",
         styles[variant],
         className,
       )}
@@ -47,7 +47,7 @@ export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElem
   return (
     <input
       className={cn(
-        "border-line bg-bg-elevated text-ink placeholder:text-muted w-full rounded-xl border px-3 py-2 text-sm",
+        "border-line bg-bg-elevated text-ink placeholder:text-muted w-full min-h-11 rounded-xl border px-3 py-2 text-base",
         className,
       )}
       {...props}
@@ -59,7 +59,7 @@ export function Textarea({ className, ...props }: TextareaHTMLAttributes<HTMLTex
   return (
     <textarea
       className={cn(
-        "border-line bg-bg-elevated text-ink placeholder:text-muted w-full rounded-xl border px-3 py-2 text-sm",
+        "border-line bg-bg-elevated text-ink placeholder:text-muted w-full min-h-24 rounded-xl border px-3 py-2 text-base",
         className,
       )}
       {...props}

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { logoutAction } from "@/server/actions/auth";
 import type { CurrentUser } from "@/server/auth/session";
 import { ThemeToggle } from "./theme-toggle";
+import { AppNav } from "./app-nav";
 
 export function AppShell({ user, children }: { user: CurrentUser; children: React.ReactNode }) {
   const role = user.memberships.find((item) => item.status === "ACTIVE")?.role ?? "COLLECTOR";
@@ -20,34 +21,38 @@ export function AppShell({ user, children }: { user: CurrentUser; children: Reac
   ];
 
   return (
-    <div className="bg-bg text-ink min-h-screen">
+    <div className="bg-bg text-ink min-h-screen pb-20 md:pb-0">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4">
         Skip to content
       </a>
-      <header className="border-line bg-bg-elevated border-b">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
+      <header className="border-line bg-bg-elevated sticky top-0 z-20 border-b">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
           <Link href="/dashboard" className="display text-xl">
             MotorLedger
           </Link>
-          <nav className="hidden items-center gap-4 text-sm md:flex">
-            {links.map((link) => (
-              <Link key={link.href} href={link.href} className="text-muted hover:text-ink">
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="flex items-center gap-3">
+          <div className="hidden md:block">
+            <AppNav links={links} />
+          </div>
+          <div className="flex items-center gap-2">
             <ThemeToggle />
-            <span className="text-muted hidden text-xs sm:inline">{user.email}</span>
+            <span className="text-muted hidden max-w-40 truncate text-xs lg:inline">{user.email}</span>
             <form action={logoutAction}>
-              <button className="text-muted hover:text-ink text-sm" type="submit">
+              <button className="text-muted hover:text-ink min-h-11 px-2 text-sm" type="submit">
                 Sign out
               </button>
             </form>
+            <details className="md:hidden">
+              <summary className="border-line min-h-11 cursor-pointer list-none rounded-full border px-4 py-2 text-sm">
+                Menu
+              </summary>
+              <div className="border-line bg-bg-elevated absolute top-full right-4 mt-2 w-56 rounded-2xl border p-2 shadow-lg">
+                <AppNav links={links} compact />
+              </div>
+            </details>
           </div>
         </div>
       </header>
-      <main id="main" className="mx-auto w-full max-w-6xl px-4 py-8">
+      <main id="main" className="mx-auto w-full max-w-6xl px-4 py-6 md:py-8">
         {children}
       </main>
     </div>

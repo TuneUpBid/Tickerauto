@@ -24,6 +24,20 @@ export const metadata: Metadata = {
   title: "MotorLedger",
   description:
     "Collector-car portfolio tracking, source-backed market estimates, and lender-facing collateral documentation.",
+  appleWebApp: {
+    capable: true,
+    title: "MotorLedger",
+    statusBarStyle: "default",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
