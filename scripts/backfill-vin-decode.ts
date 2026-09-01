@@ -3,14 +3,9 @@ import { applyVinDecodeToVehicle } from "../src/server/services/vehicles";
 import { correlationId } from "../src/lib/utils";
 
 async function main() {
-  const user = await prisma.user.findFirst({
-    where: { memberships: { some: { status: "ACTIVE" } } },
-    include: { memberships: { include: { organization: true } } },
-  });
-  if (!user) throw new Error("No user available to apply VIN decode.");
-
   const vehicles = await prisma.vehicle.findMany({
     where: { vin: { not: null } },
+    include: { collection: true },
     orderBy: { createdAt: "desc" },
   });
 
@@ -18,6 +13,14 @@ async function main() {
     const vin = vehicle.vin?.replace(/[^A-Za-z0-9]/g, "") ?? "";
     if (vin.length !== 17) {
       console.log(`skip ${vehicle.year} ${vehicle.make} ${vehicle.model}: VIN is not 17 characters`);
+      continue;
+    }
+    const user = await prisma.user.findUnique({
+      where: { id: vehicle.collection.ownerUserId },
+      include: { memberships: { include: { organization: true } } },
+    });
+    if (!user) {
+      console.log(`skip ${vin}: collection owner not found`);
       continue;
     }
     const result = await applyVinDecodeToVehicle(user, vehicle.id, correlationId(), {
