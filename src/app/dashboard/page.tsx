@@ -125,23 +125,21 @@ export default async function DashboardPage() {
                         {row.latestValuation ? ` · ${row.latestValuation.freshness}` : ""}
                       </p>
                     </div>
-                    <p className="tabular hidden text-right sm:block">
+                    <p className="tabular shrink-0 text-right">
                       {formatMoney(row.pnl.currentEstimatedValue)}
                     </p>
                     <p
                       className={
                         changeDir === "up"
-                          ? "text-up tabular w-28 shrink-0 text-right text-sm"
+                          ? "text-up tabular w-24 shrink-0 text-right text-sm"
                           : changeDir === "down"
-                            ? "text-down tabular w-28 shrink-0 text-right text-sm"
-                            : "text-muted tabular w-28 shrink-0 text-right text-sm"
+                            ? "text-down tabular w-24 shrink-0 text-right text-sm"
+                            : "text-muted tabular w-24 shrink-0 text-right text-sm"
                       }
                     >
-                      {row.pnl.currentEstimatedValue
-                        ? change === null
-                          ? "—"
-                          : formatPercent(change)
-                        : "Insufficient verified data"}
+                      {row.pnl.currentEstimatedValue && change !== null
+                        ? formatPercent(change)
+                        : "—"}
                     </p>
                   </Link>
                 </li>

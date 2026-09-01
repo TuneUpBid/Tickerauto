@@ -53,7 +53,9 @@ export function MarksCard({
                 : "text-muted tabular text-sm"
           }
         >
-          {formatPercent(changes[period])}
+          {changes[period] === null || changes[period] === undefined
+            ? "—"
+            : formatPercent(changes[period])}
         </p>
       </div>
       <PortfolioChart snapshots={filtered} />
