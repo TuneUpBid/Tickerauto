@@ -9,7 +9,7 @@ export function ThemeToggle({ compact = false }: { compact?: boolean }) {
   return (
     <button
       type="button"
-      className="border-line text-ink inline-flex min-h-11 items-center border px-3 text-sm"
+      className="border-line text-ink inline-flex min-h-11 items-center rounded-full border px-3 text-sm"
       onClick={() => setTheme(isDark ? "light" : "dark")}
       aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
       suppressHydrationWarning

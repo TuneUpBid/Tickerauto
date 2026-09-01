@@ -42,10 +42,10 @@ export function AppShell({ user, children }: { user: CurrentUser; children: Reac
               </button>
             </form>
             <details className="lg:hidden">
-              <summary className="border-line min-h-11 cursor-pointer list-none border px-3 py-2 text-sm">
+              <summary className="border-line min-h-11 cursor-pointer list-none rounded-full border px-4 py-2 text-sm">
                 Menu
               </summary>
-              <div className="border-line bg-bg absolute top-full right-4 mt-0 w-56 border p-1">
+              <div className="border-line bg-bg-elevated absolute top-full right-4 mt-2 w-56 rounded-2xl border p-2">
                 <AppNav links={links} compact />
               </div>
             </details>
@@ -55,6 +55,12 @@ export function AppShell({ user, children }: { user: CurrentUser; children: Reac
       <main id="main" className="mx-auto w-full max-w-5xl px-4 py-6 md:py-8">
         {children}
       </main>
+      <footer className="mx-auto max-w-5xl px-4 pb-10 pt-4">
+        <p className="text-muted text-center text-xs leading-5">
+          Estimated values are source-backed market estimates or independently appraised values.
+          They are not guaranteed, not bank approved, and not invented when evidence is missing.
+        </p>
+      </footer>
     </div>
   );
 }

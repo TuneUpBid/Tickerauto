@@ -34,12 +34,12 @@ export default function HomePage() {
         <Wordmark />
         <div className="flex shrink-0 items-center gap-2 text-sm">
           <ThemeToggle compact />
-          <Link href="/login" className="border-line inline-flex min-h-11 items-center border px-3">
+          <Link href="/login" className="border-line inline-flex min-h-11 items-center rounded-full border px-4">
             Sign in
           </Link>
           <Link
             href="/register"
-            className="bg-accent text-accent-ink inline-flex min-h-11 items-center px-3"
+            className="bg-accent text-accent-ink inline-flex min-h-11 items-center rounded-full px-4"
           >
             Open a ledger
           </Link>
@@ -63,13 +63,13 @@ export default function HomePage() {
             <div className="mt-8 flex flex-wrap gap-2">
               <Link
                 href="/register"
-                className="bg-accent text-accent-ink inline-flex min-h-11 items-center px-4"
+                className="bg-accent text-accent-ink inline-flex min-h-11 items-center rounded-full px-4"
               >
                 Create an account
               </Link>
               <Link
                 href="/legal/disclosures"
-                className="border-line inline-flex min-h-11 items-center border px-4"
+                className="border-line inline-flex min-h-11 items-center rounded-full border px-4"
               >
                 Disclosures
               </Link>

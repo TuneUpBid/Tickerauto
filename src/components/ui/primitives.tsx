@@ -8,7 +8,7 @@ import type {
 
 export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn("border-line bg-bg-elevated border p-4", className)} {...props} />
+    <div className={cn("border-line bg-bg-elevated rounded-2xl border p-5", className)} {...props} />
   );
 }
 
@@ -28,7 +28,7 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex min-h-11 items-center justify-center px-3 py-2 text-sm font-medium disabled:opacity-50",
+        "inline-flex min-h-11 items-center justify-center rounded-full px-4 py-2 text-sm font-medium disabled:opacity-50",
         styles[variant],
         className,
       )}
@@ -41,7 +41,7 @@ export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElem
   return (
     <input
       className={cn(
-        "border-line bg-bg text-ink placeholder:text-muted w-full min-h-11 border px-3 py-2 text-base",
+        "border-line bg-bg text-ink placeholder:text-muted w-full min-h-11 rounded-xl border px-3 py-2 text-base",
         className,
       )}
       {...props}
@@ -53,7 +53,7 @@ export function Textarea({ className, ...props }: TextareaHTMLAttributes<HTMLTex
   return (
     <textarea
       className={cn(
-        "border-line bg-bg text-ink placeholder:text-muted w-full min-h-24 border px-3 py-2 text-base",
+        "border-line bg-bg text-ink placeholder:text-muted w-full min-h-24 rounded-xl border px-3 py-2 text-base",
         className,
       )}
       {...props}
@@ -90,7 +90,7 @@ export function Alert({
     up: "border-up",
   };
   return (
-    <div className={cn("mt-4 border px-4 py-3 text-sm", tones[tone])} role="status">
+    <div className={cn("mt-4 rounded-2xl border px-4 py-3 text-sm", tones[tone])} role="status">
       {title ? <p className="font-medium">{title}</p> : null}
       <div className="text-muted">{children}</div>
     </div>
@@ -111,7 +111,7 @@ export function Badge({
     warn: "border-warn text-warn",
   };
   return (
-    <span className={cn("kicker inline-flex items-center border px-2 py-0.5", tones[tone])}>
+    <span className={cn("kicker inline-flex items-center rounded-full border px-2.5 py-0.5", tones[tone])}>
       {children}
     </span>
   );
@@ -119,7 +119,7 @@ export function Badge({
 
 export function EmptyState({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="border-line border border-dashed px-6 py-12">
+    <div className="border-line rounded-2xl border border-dashed px-6 py-12">
       <h3 className="display text-lg">{title}</h3>
       <div className="text-muted mt-2 text-sm">{children}</div>
     </div>

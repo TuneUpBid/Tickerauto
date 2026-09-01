@@ -20,7 +20,7 @@
   --warn: #e0c36a;
   --focus: #d4a15a;
   --shadow-card: none;
-  --radius: 0px;
+  --radius: 16px;
   --wash: rgba(212, 161, 90, 0.08);
 }
 
@@ -39,7 +39,7 @@
   --warn: #8a6a1a;
   --focus: #3d5a80;
   --shadow-card: none;
-  --radius: 0px;
+  --radius: 16px;
   --wash: transparent;
 }
 
