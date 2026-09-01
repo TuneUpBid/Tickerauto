@@ -1,3 +1,5 @@
+import { decodeNhtsaVin } from "./nhtsa-vin";
+
 export interface IdentityCheckRequest {
   type:
     | "VIN_DECODE"
@@ -20,6 +22,44 @@ export interface IdentityCheckResult {
   performedAt: Date | null;
   sourceReference: string | null;
   summary: string;
+}
+
+export class NhtsaVinDecodeProvider implements IdentityVerificationProvider {
+  configured = true;
+  async run(request: IdentityCheckRequest): Promise<IdentityCheckResult> {
+    const result = await decodeNhtsaVin(request.vin);
+    if (!result.ok) {
+      return {
+        type: "VIN_DECODE",
+        provider: "NHTSA vPIC",
+        outcome: result.unavailable ? "PROVIDER_UNAVAILABLE" : "INCONCLUSIVE",
+        performedAt: new Date(),
+        sourceReference: "https://vpic.nhtsa.dot.gov",
+        summary: result.reason,
+      };
+    }
+    const consistencyIssues: string[] = [];
+    if (request.year && result.decoded.year && request.year !== result.decoded.year) {
+      consistencyIssues.push(`stated year ${request.year} vs decoded ${result.decoded.year}`);
+    }
+    if (
+      request.make &&
+      result.decoded.make &&
+      request.make.toLowerCase() !== result.decoded.make.toLowerCase()
+    ) {
+      consistencyIssues.push(`stated make ${request.make} vs decoded ${result.decoded.make}`);
+    }
+    return {
+      type: "VIN_DECODE",
+      provider: "NHTSA vPIC",
+      outcome: consistencyIssues.length ? "INCONCLUSIVE" : "PASSED",
+      performedAt: new Date(),
+      sourceReference: "https://vpic.nhtsa.dot.gov",
+      summary: consistencyIssues.length
+        ? `${result.summary} ${consistencyIssues.join("; ")}`
+        : result.summary,
+    };
+  }
 }
 
 export interface IdentityVerificationProvider {
@@ -45,8 +85,11 @@ export class UnconfiguredIdentityProvider implements IdentityVerificationProvide
 export function getIdentityProvider(
   type: IdentityCheckRequest["type"],
 ): IdentityVerificationProvider {
+  if (type === "VIN_DECODE") {
+    return new NhtsaVinDecodeProvider();
+  }
   const names: Record<IdentityCheckRequest["type"], string> = {
-    VIN_DECODE: process.env.VEHICLE_HISTORY_PROVIDER || "VIN decoder",
+    VIN_DECODE: "NHTSA vPIC",
     TITLE: process.env.TITLE_PROVIDER || "Title provider",
     LIEN: process.env.TITLE_PROVIDER || "Lien provider",
     THEFT: process.env.THEFT_PROVIDER || "Theft-check provider",

@@ -28,7 +28,13 @@ import {
   probeOldCarsDataConnection,
   refreshFromLiveProvider,
 } from "../services/market";
-import { recordAcquisition, recordExpense, createVehicle } from "../services/vehicles";
+import {
+  applyVinDecodeToVehicle,
+  recordAcquisition,
+  recordExpense,
+  createVehicle,
+} from "../services/vehicles";
+import { decodeNhtsaVin, type DecodedVin } from "../providers/nhtsa-vin";
 import { developVehicleValuation } from "../services/valuation";
 import { recordLenderDecision, revokeShare, shareReport } from "../services/sharing";
 import { capturePortfolioSnapshot } from "../services/portfolio";
@@ -74,6 +80,39 @@ export async function createCollectionAction(
   redirect(`/collections/${collection.id}`);
 }
 
+export async function decodeVinAction(vin: string): Promise<{
+  error?: string;
+  summary?: string;
+  decoded?: DecodedVin;
+}> {
+  await requireUser();
+  const result = await decodeNhtsaVin(vin);
+  if (!result.ok) return { error: result.reason };
+  return { summary: result.summary, decoded: result.decoded };
+}
+
+export async function fillVehicleFromVinAction(
+  _prev: { error?: string; ok?: string } | null,
+  formData: FormData,
+): Promise<{ error?: string; ok?: string }> {
+  const user = await requireUser();
+  const vehicleId = text(formData, "vehicleId");
+  if (!vehicleId) return { error: "Vehicle is required." };
+  try {
+    const { decoded } = await applyVinDecodeToVehicle(user, vehicleId, correlationId(), {
+      developValuation: true,
+    });
+    if (!decoded.ok) return { error: decoded.reason };
+    revalidatePath(`/vehicles/${vehicleId}`);
+    revalidatePath("/dashboard");
+    return {
+      ok: `${decoded.summary} Empty identity fields were filled. A draft valuation was attempted from completed sales only.`,
+    };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "VIN decode failed." };
+  }
+}
+
 export async function createVehicleAction(
   _prev: { error?: string } | null,
   formData: FormData,
@@ -81,7 +120,12 @@ export async function createVehicleAction(
   const user = await requireUser();
   const parsed = vehicleSchema.safeParse(Object.fromEntries(formData.entries()));
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid vehicle." };
-  const vehicle = await createVehicle(user, parsed.data, correlationId());
+  let vehicle;
+  try {
+    vehicle = await createVehicle(user, parsed.data, correlationId());
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Unable to save vehicle." };
+  }
   revalidatePath("/dashboard");
   redirect(`/vehicles/${vehicle.id}`);
 }

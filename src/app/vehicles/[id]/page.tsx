@@ -8,6 +8,7 @@ import { prisma } from "@/server/db";
 import { vehiclePnl } from "@/server/services/portfolio";
 import { AcquisitionForm } from "@/components/vehicles/financial-forms";
 import { ValuationRequestForm } from "@/components/vehicles/valuation-form";
+import { VinFillForm } from "@/components/vehicles/vin-fill-form";
 
 export default async function VehiclePage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
@@ -47,9 +48,12 @@ export default async function VehiclePage({ params }: { params: Promise<{ id: st
         </div>
       </div>
       <p className="text-muted mt-2 text-sm">
-        {vehicle.trim ?? "No trim recorded"} · {vehicle.bodyStyle ?? "Body style unknown"} · VIN{" "}
-        {vehicle.vin ?? "not provided"}
+        {[vehicle.trim, vehicle.bodyStyle, vehicle.engine, vehicle.drivetrain]
+          .filter(Boolean)
+          .join(" · ") || "Identity fields not yet filled"}
+        {vehicle.vin ? ` · VIN ${vehicle.vin}` : " · VIN not provided"}
       </p>
+      <VinFillForm vehicleId={vehicle.id} vin={vehicle.vin} />
 
       <div className="mt-6 grid gap-4 md:grid-cols-3">
         <Card>

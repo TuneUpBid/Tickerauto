@@ -10,6 +10,7 @@ import { writeAudit } from "../audit";
 import { prisma } from "../db";
 import { canMutateCollection } from "../rbac";
 import type { CurrentUser } from "../auth/session";
+import { decodeNhtsaVin } from "../providers/nhtsa-vin";
 import { refreshFromLiveProvider } from "./market";
 
 function toCandidate(tx: {
@@ -92,18 +93,42 @@ export async function developVehicleValuation(
   if (!vehicle) throw new Error("Vehicle not found.");
   if (!canMutateCollection(user, vehicle.collection)) throw new Error("Not authorized.");
 
-  const live = await refreshFromLiveProvider({
-    make: vehicle.make,
-    model: vehicle.model,
-    yearMin: vehicle.year - 2,
-    yearMax: vehicle.year + 2,
-  });
+  const queries = [{ make: vehicle.make, model: vehicle.model }];
+  const decoded = vehicle.vin ? await decodeNhtsaVin(vehicle.vin) : { ok: false as const };
+  if (
+    decoded.ok &&
+    decoded.decoded.make &&
+    decoded.decoded.model &&
+    (decoded.decoded.make.toLowerCase() !== vehicle.make.toLowerCase() ||
+      decoded.decoded.model.toLowerCase() !== vehicle.model.toLowerCase())
+  ) {
+    queries.push({ make: decoded.decoded.make, model: decoded.decoded.model });
+  }
+
+  let live: Awaited<ReturnType<typeof refreshFromLiveProvider>> = {
+    ok: false,
+    reason: "No market query ran.",
+  };
+  for (const query of queries) {
+    const result = await refreshFromLiveProvider({
+      make: query.make,
+      model: query.model,
+      yearMin: vehicle.year - 2,
+      yearMax: vehicle.year + 2,
+    });
+    if (result.ok) live = result;
+    else if (!live.ok) live = result;
+  }
 
   const stored = await prisma.marketTransaction.findMany({
     where: {
-      make: { equals: vehicle.make, mode: "insensitive" },
-      model: { equals: vehicle.model, mode: "insensitive" },
       year: { gte: vehicle.year - 3, lte: vehicle.year + 3 },
+      OR: queries.map((query) => ({
+        AND: [
+          { make: { equals: query.make, mode: "insensitive" as const } },
+          { model: { equals: query.model, mode: "insensitive" as const } },
+        ],
+      })),
     },
     orderBy: { auctionEndAt: "desc" },
     take: 80,

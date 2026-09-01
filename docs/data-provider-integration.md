@@ -62,7 +62,7 @@ npx tsx scripts/import-authorized-market-json.ts tests/fixtures/old-cars-data-19
 
 Interface: `src/server/providers/verification.ts`
 
-VIN check-digit validation (ISO 3779) is local and labeled as such. Title, lien, theft, salvage brand, odometer, and vehicle-history checks return `NOT_PERFORMED` until a provider is connected. The UI always shows provider, result, date, and source reference.
+VIN check-digit validation (ISO 3779) is local and labeled as such. 17-character VINs are decoded through NHTSA vPIC (`GET https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/{VIN}?format=json`). Year, make, model, trim, series, body, engine, transmission, and drivetrain are filled only when NHTSA returns them — empty fields stay empty. Pre-1981 chassis numbers are stored as entered and are not decoded. Title, lien, theft, salvage brand, odometer, and vehicle-history checks return `NOT_PERFORMED` until a provider is connected. The UI always shows provider, result, date, and source reference.
 
 ## Storage, email, malware, jobs
 

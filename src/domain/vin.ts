@@ -131,7 +131,7 @@ export function makeModelConsistency(input: {
     return {
       consistent: false,
       summary:
-        "Manufacturer and model consistency was not checked because no VIN decoder provider is connected.",
+        "Manufacturer and model consistency was not checked because NHTSA did not return decoded identity fields.",
     };
   }
   return {
