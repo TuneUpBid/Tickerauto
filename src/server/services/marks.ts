@@ -21,13 +21,15 @@ export async function lastDailyMarksRunDate(now: Date = new Date()) {
 export async function runDailyCollectionMarks(options?: {
   force?: boolean;
   actorUserId?: string | null;
+  collectionId?: string;
 }) {
   const timeZone = marksTimeZone();
   const now = new Date();
   const today = calendarDateInTimeZone(now, timeZone);
+  const jobName = options?.collectionId ? `daily-marks:${options.collectionId}` : "daily-marks";
   if (!options?.force) {
     const existing = await prisma.importJob.findFirst({
-      where: { name: "daily-marks", payloadHash: today },
+      where: { name: jobName, payloadHash: today },
     });
     if (existing?.status === "SUCCEEDED" || existing?.status === "RUNNING") {
       return { skipped: true as const, date: today, reason: "Marks already ran for this calendar day." };
@@ -35,13 +37,16 @@ export async function runDailyCollectionMarks(options?: {
   }
 
   const job = await prisma.importJob.upsert({
-    where: { name_payloadHash: { name: "daily-marks", payloadHash: today } },
-    create: { name: "daily-marks", payloadHash: today, status: "RUNNING", startedAt: now },
+    where: { name_payloadHash: { name: jobName, payloadHash: today } },
+    create: { name: jobName, payloadHash: today, status: "RUNNING", startedAt: now },
     update: { status: "RUNNING", startedAt: now, lastError: null },
   });
 
   const vehicles = await prisma.vehicle.findMany({
-    where: { status: { in: ["OWNED", "CONSIGNED"] } },
+    where: {
+      status: { in: ["OWNED", "CONSIGNED"] },
+      ...(options?.collectionId ? { collectionId: options.collectionId } : {}),
+    },
     include: {
       collection: true,
       valuations: { orderBy: { effectiveOn: "desc" }, take: 1 },

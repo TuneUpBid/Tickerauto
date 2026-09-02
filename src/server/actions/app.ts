@@ -162,11 +162,30 @@ export async function refreshCollectionMarksAction(
   _prev: { error?: string; ok?: string } | null,
 ): Promise<{ error?: string; ok?: string }> {
   const user = await requireUser();
+  const collection = await prisma.collection.findFirst({
+    where: {
+      OR: [
+        { ownerUserId: user.id },
+        { organizationId: { in: user.memberships.map((item) => item.organizationId) } },
+      ],
+    },
+    orderBy: { createdAt: "asc" },
+  });
+  if (!collection) return { error: "No collection yet." };
   try {
-    const result = await runDailyCollectionMarks({ force: true, actorUserId: user.id });
+    const result = await runDailyCollectionMarks({
+      force: true,
+      actorUserId: user.id,
+      collectionId: collection.id,
+    });
     revalidatePath("/dashboard");
     revalidatePath("/lending");
     if (result.skipped) return { ok: result.reason };
+    if (result.refreshed === 0) {
+      return {
+        ok: `Already marked this Pacific day. ${result.vehicles} vehicles kept their current drafts. Nothing was invented.`,
+      };
+    }
     return {
       ok: `Pulled completed sales for ${result.vehicles} vehicles. ${result.refreshed} drafts rebuilt, ${result.insufficient} still insufficient. Nothing was invented.`,
     };
