@@ -3,7 +3,7 @@ import { AppShell } from "@/components/layout/shell";
 import { Button, Card, EmptyState, Stat } from "@/components/ui/primitives";
 import { MarksCard } from "@/components/dashboard/marks-card";
 import { RefreshMarksForm } from "@/components/dashboard/refresh-marks-form";
-import { latestMarksJob, marksTimeZone } from "@/server/services/marks";
+import { latestMarksJob, marksScheduleLabel } from "@/server/services/marks";
 import { formatMoney } from "@/domain/money";
 import { formatPercent } from "@/lib/format";
 import { requireUser } from "@/server/auth/require";
@@ -99,7 +99,7 @@ export default async function DashboardPage() {
         snapshots={portfolio.snapshots}
         changes={portfolio.changes}
         lastMarkedAt={lastSnapshot}
-        scheduleNote={`Completed sales are pulled every night after midnight ${marksTimeZone().replace("_", " ")}. Charts use stored snapshots only — no interpolated days.`}
+        scheduleNote={`Completed sales are pulled once each ${marksScheduleLabel()} day after midnight. If the app was offline then, the pass runs when it comes back. Charts use stored snapshots only — no interpolated days.`}
       />
 
       <Card className="mt-4">

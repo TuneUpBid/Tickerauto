@@ -27,7 +27,6 @@ async function tick(timeZone: string) {
       lastRunDate,
       now,
       timeZone,
-      requireMidnightWindow: true,
     })
   ) {
     return;

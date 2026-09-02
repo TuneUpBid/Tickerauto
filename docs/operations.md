@@ -43,7 +43,7 @@ npm run build
 - Configure email, malware scanning, and `OLD_CARS_DATA_API_KEY` (see `docs/data-provider-integration.md`) before treating the environment as lender-facing.
 - Have appraisal and legal counsel replace draft certification language.
 - Back up PostgreSQL and the object store. Audit events and signed reports must not be rewritten in place.
-- Collection marks refresh after midnight in `MARKS_TIMEZONE` (default America/Los_Angeles) while the Node server is running. Call `GET /api/cron/daily-marks` with `Authorization: Bearer $CRON_SECRET` if you use an external scheduler. Independently appraised values are snapshotted, not overwritten. Missing sold comps stay **Insufficient verified data**.
+- Collection marks run once per calendar day in `MARKS_TIMEZONE` (default America/Los_Angeles) after midnight, while the Node server is running. If the process missed the midnight hour, it catches up the first time it is up later that day. Call `GET /api/cron/daily-marks` with `Authorization: Bearer $CRON_SECRET` if you use an external scheduler. Independently appraised values are snapshotted, not overwritten. Missing sold comps stay **Insufficient verified data**.
 
 ## Retention and privacy
 

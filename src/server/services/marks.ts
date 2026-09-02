@@ -144,10 +144,16 @@ export async function latestMarksJob() {
   });
 }
 
+export function marksScheduleLabel() {
+  const timeZone = marksTimeZone();
+  return timeZone === "America/Los_Angeles" ? "Pacific" : timeZone.replaceAll("_", " ");
+}
+
 export function marksScheduleCopy() {
   const config = getConfig();
   return {
     timeZone: marksTimeZone(),
+    label: marksScheduleLabel(),
     hourLabel: "12:00 a.m.",
     baseUrl: config.baseUrl,
   };

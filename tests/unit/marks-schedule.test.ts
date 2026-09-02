@@ -16,13 +16,39 @@ describe("daily marks schedule", () => {
         lastRunDate: null,
         now: midnightPt,
         timeZone: "America/Los_Angeles",
-        requireMidnightWindow: true,
       }),
     ).toBe(true);
     expect(
       shouldRunDailyPass({
         lastRunDate: "2026-09-02",
         now: midnightPt,
+        timeZone: "America/Los_Angeles",
+      }),
+    ).toBe(false);
+  });
+
+  it("catches up later the same Pacific day if midnight was missed", () => {
+    const afternoonPt = new Date("2026-09-02T20:00:00.000Z");
+    expect(calendarDateInTimeZone(afternoonPt, "America/Los_Angeles")).toBe("2026-09-02");
+    expect(isMidnightWindow(afternoonPt, "America/Los_Angeles")).toBe(false);
+    expect(
+      shouldRunDailyPass({
+        lastRunDate: "2026-09-01",
+        now: afternoonPt,
+        timeZone: "America/Los_Angeles",
+      }),
+    ).toBe(true);
+    expect(
+      shouldRunDailyPass({
+        lastRunDate: "2026-09-02",
+        now: afternoonPt,
+        timeZone: "America/Los_Angeles",
+      }),
+    ).toBe(false);
+    expect(
+      shouldRunDailyPass({
+        lastRunDate: "2026-09-01",
+        now: afternoonPt,
         timeZone: "America/Los_Angeles",
         requireMidnightWindow: true,
       }),

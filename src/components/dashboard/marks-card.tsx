@@ -81,7 +81,7 @@ export function MarksCard({
       </div>
       <p className="text-muted mt-3 text-xs leading-5">
         {scheduleNote ??
-          "Marks refresh after midnight Pacific: completed sales are pulled again. Missing comps stay insufficient."}
+          "Marks refresh once each Pacific day after midnight. Missing comps stay insufficient."}
         {lastMarkedAt
           ? ` Last mark ${new Date(lastMarkedAt).toLocaleString("en-US", { timeZone: "America/Los_Angeles" })} PT.`
           : " No nightly mark yet."}
