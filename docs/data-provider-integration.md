@@ -50,6 +50,8 @@ OLD_CARS_DATA_API_KEY=your-key
 
 Administrators can test the connection and pull completed sales from **Admin**. Collectors can retrieve the same way from **Comparables**. Draft valuations call the live provider when the key is present; if the call fails, the last stored verified sales are preserved and marked stale.
 
+A nightly pass (`src/server/services/marks.ts`) pulls completed sales again for every owned or consigned vehicle and writes a portfolio snapshot. It does not invent a figure when sold comps are still thin. Signed independently appraised values are left in place.
+
 A recorded fixture of real completed and reserve-not-met listings remains in `tests/fixtures` for automated tests only. That fixture is not a production seed.
 
 Import:

@@ -82,16 +82,27 @@ export async function ensureDefaultMethodology() {
 }
 
 export async function developVehicleValuation(
-  user: CurrentUser,
+  user: CurrentUser | null,
   input: { vehicleId: string; intendedUse: string; intendedUsers: string },
   correlationId: string,
+  options?: {
+    skipAuth?: boolean;
+    actorUserId?: string | null;
+    source?: string;
+    yearWindow?: number;
+  },
 ) {
   const vehicle = await prisma.vehicle.findUnique({
     where: { id: input.vehicleId },
     include: { collection: true },
   });
   if (!vehicle) throw new Error("Vehicle not found.");
-  if (!canMutateCollection(user, vehicle.collection)) throw new Error("Not authorized.");
+  if (!options?.skipAuth) {
+    if (!user || !canMutateCollection(user, vehicle.collection)) {
+      throw new Error("Not authorized.");
+    }
+  }
+  const yearWindow = options?.yearWindow ?? 3;
 
   const queries = [{ make: vehicle.make, model: vehicle.model }];
   const decoded = vehicle.vin ? await decodeNhtsaVin(vehicle.vin) : { ok: false as const };
@@ -113,8 +124,8 @@ export async function developVehicleValuation(
     const result = await refreshFromLiveProvider({
       make: query.make,
       model: query.model,
-      yearMin: vehicle.year - 2,
-      yearMax: vehicle.year + 2,
+      yearMin: vehicle.year - yearWindow,
+      yearMax: vehicle.year + yearWindow,
     });
     if (result.ok) live = result;
     else if (!live.ok) live = result;
@@ -122,7 +133,7 @@ export async function developVehicleValuation(
 
   const stored = await prisma.marketTransaction.findMany({
     where: {
-      year: { gte: vehicle.year - 3, lte: vehicle.year + 3 },
+      year: { gte: vehicle.year - yearWindow, lte: vehicle.year + yearWindow },
       OR: queries.map((query) => ({
         AND: [
           { make: { equals: query.make, mode: "insensitive" as const } },
@@ -251,7 +262,7 @@ export async function developVehicleValuation(
   });
 
   await writeAudit({
-    actorUserId: user.id,
+      actorUserId: options?.actorUserId ?? user?.id ?? vehicle.collection.ownerUserId,
     organizationId: vehicle.collection.organizationId,
     action: "valuation.developed",
     subjectType: "Valuation",
@@ -260,7 +271,7 @@ export async function developVehicleValuation(
       status: valuation.status,
       estimatedValueMinor: valuation.estimatedValueMinor?.toString() ?? null,
     },
-    source: "valuation.develop",
+    source: options?.source ?? "valuation.develop",
     correlationId,
   });
   return valuation;

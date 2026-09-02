@@ -18,9 +18,13 @@ type PeriodKey = (typeof PERIODS)[number]["key"];
 export function MarksCard({
   snapshots,
   changes,
+  lastMarkedAt,
+  scheduleNote,
 }: {
   snapshots: { date: Date | string; value: number | null; freshness: string }[];
   changes: Record<PeriodKey, number | null>;
+  lastMarkedAt?: Date | string | null;
+  scheduleNote?: string;
 }) {
   const [period, setPeriod] = useState<PeriodKey>("monthly");
   const selected = PERIODS.find((item) => item.key === period) ?? PERIODS[2];
@@ -75,6 +79,13 @@ export function MarksCard({
           </button>
         ))}
       </div>
+      <p className="text-muted mt-3 text-xs leading-5">
+        {scheduleNote ??
+          "Marks refresh after midnight Pacific: completed sales are pulled again. Missing comps stay insufficient."}
+        {lastMarkedAt
+          ? ` Last mark ${new Date(lastMarkedAt).toLocaleString("en-US", { timeZone: "America/Los_Angeles" })} PT.`
+          : " No nightly mark yet."}
+      </p>
     </Card>
   );
 }

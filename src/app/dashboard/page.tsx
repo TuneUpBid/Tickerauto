@@ -2,6 +2,8 @@ import Link from "next/link";
 import { AppShell } from "@/components/layout/shell";
 import { Button, Card, EmptyState, Stat } from "@/components/ui/primitives";
 import { MarksCard } from "@/components/dashboard/marks-card";
+import { RefreshMarksForm } from "@/components/dashboard/refresh-marks-form";
+import { latestMarksJob, marksTimeZone } from "@/server/services/marks";
 import { formatMoney } from "@/domain/money";
 import { formatPercent } from "@/lib/format";
 import { requireUser } from "@/server/auth/require";
@@ -49,8 +51,12 @@ export default async function DashboardPage() {
     );
   }
 
-  const portfolio = await collectionPortfolio(collection.id);
+  const [portfolio, marksJob] = await Promise.all([
+    collectionPortfolio(collection.id),
+    latestMarksJob(),
+  ]);
   const estimated = portfolio.totals.estimated;
+  const lastSnapshot = portfolio.snapshots.at(-1)?.date ?? marksJob?.finishedAt ?? null;
 
   return (
     <AppShell user={user}>
@@ -63,6 +69,7 @@ export default async function DashboardPage() {
           <Link href={`/collections/${collection.id}`}>
             <Button variant="secondary">Collection</Button>
           </Link>
+          <RefreshMarksForm />
           <Link href={`/vehicles/new?collectionId=${collection.id}`}>
             <Button>Add vehicle</Button>
           </Link>
@@ -88,7 +95,12 @@ export default async function DashboardPage() {
         <Stat label="Realized" value={formatMoney(portfolio.totals.realized)} />
       </div>
 
-      <MarksCard snapshots={portfolio.snapshots} changes={portfolio.changes} />
+      <MarksCard
+        snapshots={portfolio.snapshots}
+        changes={portfolio.changes}
+        lastMarkedAt={lastSnapshot}
+        scheduleNote={`Completed sales are pulled every night after midnight ${marksTimeZone().replace("_", " ")}. Charts use stored snapshots only — no interpolated days.`}
+      />
 
       <Card className="mt-4">
         <div className="flex items-center justify-between gap-3">

@@ -41,6 +41,7 @@ import { stampVehicleIdentity } from "../services/identity-stamp";
 import { developVehicleValuation } from "../services/valuation";
 import { recordLenderDecision, revokeShare, shareReport } from "../services/sharing";
 import { capturePortfolioSnapshot } from "../services/portfolio";
+import { runDailyCollectionMarks } from "../services/marks";
 import { getDocumentStorage } from "../providers/storage";
 import { getMalwareScanner } from "../providers/malware-scan";
 import { writeAudit } from "../audit";
@@ -155,6 +156,23 @@ export async function saveExpenseAction(
   await recordExpense(user, parsed.data, correlationId());
   revalidatePath(`/vehicles/${parsed.data.vehicleId}`);
   return {};
+}
+
+export async function refreshCollectionMarksAction(
+  _prev: { error?: string; ok?: string } | null,
+): Promise<{ error?: string; ok?: string }> {
+  const user = await requireUser();
+  try {
+    const result = await runDailyCollectionMarks({ force: true, actorUserId: user.id });
+    revalidatePath("/dashboard");
+    revalidatePath("/lending");
+    if (result.skipped) return { ok: result.reason };
+    return {
+      ok: `Pulled completed sales for ${result.vehicles} vehicles. ${result.refreshed} drafts rebuilt, ${result.insufficient} still insufficient. Nothing was invented.`,
+    };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Marks refresh failed." };
+  }
 }
 
 export async function developValuationAction(
