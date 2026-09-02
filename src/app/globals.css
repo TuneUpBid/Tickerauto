@@ -1,0 +1,151 @@
+@import "tailwindcss";
+
+/*
+  Catalog structure with the warmer night palette: charcoal, cream, brass.
+  Dark is default. Vermillion and flat black are not used as brand colors.
+*/
+:root,
+.dark {
+  color-scheme: dark;
+  --bg: #0c0b09;
+  --bg-elevated: #16130f;
+  --bg-muted: #211c16;
+  --ink: #f4ead8;
+  --muted: #b7a894;
+  --line: #3f362b;
+  --accent: #d4a15a;
+  --accent-ink: #1a140c;
+  --up: #7dbe9a;
+  --down: #e08a7c;
+  --warn: #e0c36a;
+  --focus: #d4a15a;
+  --shadow-card: none;
+  --radius: 16px;
+  --wash: rgba(212, 161, 90, 0.08);
+}
+
+.light {
+  color-scheme: light;
+  --bg: #f4efe6;
+  --bg-elevated: #fffdf8;
+  --bg-muted: #ebe4d6;
+  --ink: #1b1712;
+  --muted: #6f6659;
+  --line: #d8cfbf;
+  --accent: #8a5a2b;
+  --accent-ink: #fffdf8;
+  --up: #2f6b4f;
+  --down: #9b3d32;
+  --warn: #8a6a1a;
+  --focus: #3d5a80;
+  --shadow-card: none;
+  --radius: 16px;
+  --wash: transparent;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-muted: var(--bg-muted);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-ink: var(--accent-ink);
+  --color-up: var(--up);
+  --color-down: var(--down);
+  --color-warn: var(--warn);
+  --font-sans: var(--font-ibm-plex-sans);
+  --font-display: var(--font-ibm-plex-sans);
+  --font-mono: var(--font-ibm-plex-mono);
+}
+
+* {
+  border-color: var(--line);
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  background:
+    radial-gradient(1000px 520px at 8% -12%, var(--wash), transparent 55%),
+    var(--bg);
+}
+
+input,
+select,
+textarea {
+  font-size: 16px;
+  background: var(--bg-elevated);
+  color: var(--ink);
+  border-radius: var(--radius);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+}
+
+input:-webkit-autofill,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: var(--ink);
+  box-shadow: 0 0 0 1000px var(--bg-elevated) inset;
+  caret-color: var(--ink);
+}
+
+button,
+a,
+summary {
+  touch-action: manipulation;
+}
+
+h1,
+h2,
+h3,
+.display {
+  font-family: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+}
+
+.wordmark {
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.kicker {
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.rule {
+  border-top: 1px solid var(--line);
+}
+
+:focus-visible {
+  outline: 1px solid var(--focus);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 38%, transparent);
+  color: var(--ink);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+}

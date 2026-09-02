@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: motorledger
+      POSTGRES_PASSWORD: motorledger_dev
+      POSTGRES_DB: motorledger
+    ports:
+      - "5432:5432"
+    volumes:
+      - motorledger_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U motorledger"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://motorledger:motorledger_dev@db:5432/motorledger
+      SESSION_SECRET: replace-in-production
+      APP_BASE_URL: http://localhost:3000
+      APP_ENV: development
+      STORAGE_PROVIDER: local
+      STORAGE_LOCAL_DIR: /data/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - motorledger_files:/data/storage
+
+volumes:
+  motorledger_pg:
+  motorledger_files:
