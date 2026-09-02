@@ -9,6 +9,8 @@ import { vehiclePnl } from "@/server/services/portfolio";
 import { AcquisitionForm } from "@/components/vehicles/financial-forms";
 import { ValuationRequestForm } from "@/components/vehicles/valuation-form";
 import { VinFillForm } from "@/components/vehicles/vin-fill-form";
+import { IdentityStampForm } from "@/components/vehicles/identity-stamp-form";
+import { canStampIdentity } from "@/domain/credentials";
 
 export default async function VehiclePage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
@@ -28,6 +30,8 @@ export default async function VehiclePage({ params }: { params: Promise<{ id: st
   if (!vehicle) return <AppShell user={user}>Vehicle not found.</AppShell>;
   const pnl = await vehiclePnl(vehicle.id);
   const latest = vehicle.valuations[0];
+  const credentials = await prisma.appraiserCredential.findMany({ where: { userId: user.id } });
+  const canStamp = credentials.some((credential) => canStampIdentity(credential));
 
   return (
     <AppShell user={user}>
@@ -54,6 +58,12 @@ export default async function VehiclePage({ params }: { params: Promise<{ id: st
         {vehicle.vin ? ` · VIN ${vehicle.vin}` : " · VIN not provided"}
       </p>
       <VinFillForm vehicleId={vehicle.id} vin={vehicle.vin} />
+      {canStamp ? (
+        <Card className="mt-4">
+          <h2 className="display text-2xl">Verifier identity stamp</h2>
+          <IdentityStampForm vehicleId={vehicle.id} />
+        </Card>
+      ) : null}
 
       <div className="mt-6 grid gap-4 md:grid-cols-3">
         <Card>

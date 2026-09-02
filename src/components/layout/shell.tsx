@@ -8,6 +8,7 @@ export function AppShell({ user, children }: { user: CurrentUser; children: Reac
   const role = user.memberships.find((item) => item.status === "ACTIVE")?.role ?? "COLLECTOR";
   const links = [
     { href: "/dashboard", label: "Portfolio" },
+    { href: "/lending", label: "Lending" },
     { href: "/market", label: "Comparables" },
     { href: "/appraisals", label: "Appraisals" },
     ...(role === "APPRAISER" || role === "ADMINISTRATOR"

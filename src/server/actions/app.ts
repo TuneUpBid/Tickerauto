@@ -12,6 +12,7 @@ import {
   shareReportSchema,
   valuationRequestSchema,
   vehicleSchema,
+  credentialSchema,
 } from "@/lib/validation";
 import { correlationId } from "@/lib/utils";
 import { getCurrentUser } from "../auth/session";
@@ -35,6 +36,8 @@ import {
   createVehicle,
 } from "../services/vehicles";
 import { decodeNhtsaVin, type DecodedVin } from "../providers/nhtsa-vin";
+import { addCredential, verifyCredential } from "../services/credentials";
+import { stampVehicleIdentity } from "../services/identity-stamp";
 import { developVehicleValuation } from "../services/valuation";
 import { recordLenderDecision, revokeShare, shareReport } from "../services/sharing";
 import { capturePortfolioSnapshot } from "../services/portfolio";
@@ -184,6 +187,53 @@ export async function requestAppraisalAction(
   redirect(`/appraisals/${assignment.id}`);
 }
 
+export async function addCredentialAction(
+  _prev: { error?: string; ok?: string } | null,
+  formData: FormData,
+): Promise<{ error?: string; ok?: string }> {
+  const user = await requireUser();
+  const parsed = credentialSchema.safeParse({
+    ...Object.fromEntries(formData.entries()),
+    uspapEducationCurrent: formData.get("uspapEducationCurrent") === "on",
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Invalid credential." };
+  await addCredential(user, parsed.data, correlationId());
+  revalidatePath("/settings");
+  revalidatePath("/lending");
+  return { ok: "Credential saved as unverified. An administrator must verify it before it can sign value." };
+}
+
+export async function verifyCredentialAction(credentialId: string, status: "VERIFIED" | "REJECTED") {
+  const user = await requireUser();
+  await verifyCredential(user, credentialId, status, correlationId());
+  revalidatePath("/admin");
+  revalidatePath("/settings");
+}
+
+export async function stampVehicleIdentityAction(
+  _prev: { error?: string; ok?: string } | null,
+  formData: FormData,
+): Promise<{ error?: string; ok?: string }> {
+  const user = await requireUser();
+  const vehicleId = text(formData, "vehicleId");
+  if (!vehicleId) return { error: "Vehicle is required." };
+  try {
+    await stampVehicleIdentity(
+      user,
+      vehicleId,
+      { location: text(formData, "location"), notes: text(formData, "notes") },
+      correlationId(),
+    );
+    revalidatePath(`/vehicles/${vehicleId}`);
+    revalidatePath("/lending");
+    return {
+      ok: "Identity stamp recorded. This verifies VIN/identity only. It does not certify market value.",
+    };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Unable to stamp identity." };
+  }
+}
+
 export async function acceptAssignmentAction(assignmentId: string) {
   const user = await requireUser();
   await acceptAssignment(user, assignmentId, correlationId());
@@ -217,10 +267,19 @@ export async function draftReportAction(assignmentId: string) {
   redirect(`/reports/${report.id}`);
 }
 
-export async function signReportAction(reportId: string) {
+export async function signReportAction(
+  _prev: { error?: string } | null,
+  formData: FormData,
+): Promise<{ error?: string }> {
   const user = await requireUser();
-  await signReport(user, reportId, correlationId());
+  const reportId = text(formData, "reportId");
+  try {
+    await signReport(user, reportId, correlationId());
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Unable to sign this report." };
+  }
   revalidatePath(`/reports/${reportId}`);
+  return {};
 }
 
 export async function shareReportAction(

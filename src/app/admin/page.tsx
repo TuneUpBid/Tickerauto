@@ -4,6 +4,7 @@ import { requireUser } from "@/server/auth/require";
 import { hasRole } from "@/server/rbac";
 import { prisma } from "@/server/db";
 import { AdminImportForm } from "@/components/admin/import-form";
+import { CredentialReviewButtons } from "@/components/admin/credential-review";
 import {
   ProbeOldCarsDataButton,
   RefreshOldCarsDataForm,
@@ -24,11 +25,16 @@ export default async function AdminPage() {
   }
   const config = getConfig();
   const keyConfigured = Boolean(config.market.oldCarsData.apiKey);
-  const [users, providers, methodologies, recentAudit] = await Promise.all([
+  const [users, providers, methodologies, recentAudit, credentials] = await Promise.all([
     prisma.user.count(),
     prisma.marketProvider.findMany(),
     prisma.methodologyVersion.findMany(),
     prisma.auditEvent.findMany({ orderBy: { timestamp: "desc" }, take: 12 }),
+    prisma.appraiserCredential.findMany({
+      include: { user: true },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+    }),
   ]);
   return (
     <AppShell user={user}>
@@ -88,6 +94,25 @@ export default async function AdminPage() {
           Paste JSON from an authorized provider export. This does not scrape websites.
         </p>
         <AdminImportForm />
+      </Card>
+      <Card className="mt-6">
+        <h2 className="display text-2xl">Credential review</h2>
+        <p className="text-muted mt-2 text-sm">
+          Verify a license or designation against the issuer. Do not mark a California Vehicle
+          Verifier as a value credential.
+        </p>
+        <ul className="mt-3 space-y-3 text-sm">
+          {credentials.map((credential) => (
+            <li key={credential.id} className="border-line border-t pt-3">
+              {credential.user.email} · {credential.credentialType} · {credential.authority} ·{" "}
+              {credential.verificationStatus}
+              {credential.credentialNumber ? ` · ${credential.credentialNumber}` : ""}
+              {credential.verificationStatus === "UNVERIFIED" ? (
+                <CredentialReviewButtons credentialId={credential.id} />
+              ) : null}
+            </li>
+          ))}
+        </ul>
       </Card>
       <Card className="mt-6">
         <h2 className="display text-2xl">Recent audit events</h2>

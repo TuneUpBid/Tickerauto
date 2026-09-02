@@ -27,6 +27,7 @@ See `docs/operations.md` for Docker, checks, and production notes.
 - `docs/security-and-threat-model.md`
 - `docs/data-provider-integration.md`
 - `docs/lender-methodology-review-checklist.md`
+- `docs/credentials-and-lending.md`
 - `docs/operations.md`
 
 ## Credentials still required for production

@@ -33,6 +33,18 @@ export default function DisclosuresPage() {
           certified unless an independent appraiser and, separately, a lender have taken those
           explicit actions.
         </li>
+        <li>
+          A California DMV Vehicle Verifier license authorizes VIN and vehicle-identity
+          verification. It does not authorize a market-value appraisal or a lending stamp.
+        </li>
+        <li>
+          The owner of a vehicle cannot independently appraise that vehicle for a loan file or a
+          net-worth statement.
+        </li>
+        <li>
+          Software and automated drafts may assemble a workfile. They do not produce the final
+          numeric appraisal.
+        </li>
       </ul>
     </main>
   );

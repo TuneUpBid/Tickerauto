@@ -1,4 +1,5 @@
 import { contentHash, randomToken, sha256Hex } from "@/domain/hashes";
+import { canSignValue, signerIsIndependent } from "@/domain/credentials";
 import { writeAudit } from "../audit";
 import { prisma } from "../db";
 import { canMutateCollection, hasRole } from "../rbac";
@@ -37,6 +38,14 @@ export async function requestAppraisal(
     valuationId?: string;
     intendedUse: string;
     intendedUsers: string;
+    engagementKind?: string;
+    valueType?:
+      | "FAIR_MARKET"
+      | "RETAIL_MARKET"
+      | "WHOLESALE"
+      | "ORDERLY_LIQUIDATION"
+      | "FORCED_SALE"
+      | "INSURANCE_AGREED";
     effectiveOn: string;
     scopeOfWork: string;
   },
@@ -55,6 +64,8 @@ export async function requestAppraisal(
       clientOrgId: collection.organizationId,
       intendedUse: input.intendedUse,
       intendedUsers: input.intendedUsers,
+      engagementKind: input.engagementKind ?? "INTERNAL_MONITORING",
+      valueType: input.valueType ?? "FAIR_MARKET",
       effectiveOn: new Date(input.effectiveOn),
       scopeOfWork: input.scopeOfWork,
       status: "REQUESTED",
@@ -288,12 +299,33 @@ export async function buildDraftReport(
 export async function signReport(user: CurrentUser, reportId: string, correlationId: string) {
   const report = await prisma.appraisalReport.findUnique({
     where: { id: reportId },
-    include: { assignment: true, signature: true },
+    include: {
+      assignment: { include: { collection: true } },
+      signature: true,
+    },
   });
   if (!report) throw new Error("Report not found.");
   if (report.signature) throw new Error("Signed reports are immutable and cannot be re-signed.");
   if (report.assignment.appraiserUserId !== user.id) {
     throw new Error("Only the assigned appraiser may sign this report.");
+  }
+  const independence = signerIsIndependent({
+    signerUserId: user.id,
+    clientUserId: report.assignment.clientUserId,
+    collectionOwnerUserId: report.assignment.collection.ownerUserId,
+  });
+  if (!independence.ok) throw new Error(independence.reason);
+  const credentials = await prisma.appraiserCredential.findMany({ where: { userId: user.id } });
+  const valueReady = credentials
+    .map((credential) => canSignValue(credential))
+    .find((result) => result.ok);
+  if (!valueReady) {
+    const first = credentials[0]
+      ? canSignValue(credentials[0]).reason
+      : "No value designation is on file.";
+    throw new Error(
+      `${first} A California Vehicle Verifier license cannot certify market value.`,
+    );
   }
   const hash = contentHash(report.payload);
   const signedAt = new Date();

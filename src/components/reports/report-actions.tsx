@@ -14,19 +14,24 @@ export function ReportActions({
   signed: boolean;
   shares: { id: string; status: string; expiresAt: Date }[];
 }) {
-  const [state, action, pending] = useActionState(shareReportAction, null);
+  const [shareState, shareAction, sharePending] = useActionState(shareReportAction, null);
+  const [signState, signAction, signPending] = useActionState(signReportAction, null);
   return (
     <div className="mt-6 space-y-6">
       {!signed ? (
-        <form
-          action={async () => {
-            await signReportAction(reportId);
-          }}
-        >
-          <Button type="submit">Sign as independent appraiser</Button>
+        <form action={signAction}>
+          <input type="hidden" name="reportId" value={reportId} />
+          <FormStatus error={signState?.error} />
+          <Button type="submit" disabled={signPending}>
+            {signPending ? "Signing…" : "Sign as independent appraiser"}
+          </Button>
+          <p className="text-muted mt-2 text-xs">
+            Requires a verified value designation, current USPAP, and a signer who is not the
+            owner. A California Vehicle Verifier license is not enough.
+          </p>
         </form>
       ) : (
-        <form action={action} className="border-line grid gap-3 border p-4">
+        <form action={shareAction} className="border-line grid gap-3 border p-4">
           <h2 className="display text-2xl">Share with a lender</h2>
           <input type="hidden" name="reportId" value={reportId} />
           <Field label="Expires in days">
@@ -35,8 +40,8 @@ export function ReportActions({
           <Field label="Allow download">
             <Input name="canDownload" defaultValue="true" />
           </Field>
-          <FormStatus error={state?.error} ok={state?.url} />
-          <Button type="submit" disabled={pending}>
+          <FormStatus error={shareState?.error} ok={shareState?.url} />
+          <Button type="submit" disabled={sharePending}>
             Create revocable share link
           </Button>
         </form>

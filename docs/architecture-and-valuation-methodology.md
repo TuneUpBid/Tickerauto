@@ -25,6 +25,8 @@ The software never uses the phrases guaranteed, 100% accurate, bank approved, or
 
 A methodology becomes lender approved only after an authorized lender user records `ACCEPTED` on a share.
 
+A California Vehicle Verifier license can stamp identity. It cannot sign value. The owner of a vehicle cannot independently appraise that vehicle. See `docs/credentials-and-lending.md`.
+
 ## Comparable-sales methodology `comps-v1.0.0`
 
 Inputs: subject vehicle characteristics and stored market transactions.

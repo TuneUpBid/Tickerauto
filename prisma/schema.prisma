@@ -153,6 +153,12 @@ enum CredentialVerificationStatus {
   REJECTED
 }
 
+enum CredentialAuthority {
+  IDENTITY
+  VALUE
+  EDUCATION_ONLY
+}
+
 enum ReportStatus {
   DRAFT
   FINALIZED
@@ -187,6 +193,7 @@ enum VerificationCheckType {
   VEHICLE_HISTORY
   MATCHING_NUMBERS
   DOCUMENT
+  PHYSICAL_IDENTITY
 }
 
 enum VerificationOutcome {
@@ -751,6 +758,8 @@ model AppraiserCredential {
   userId                 String
   organization           String
   credentialType         String
+  authority              CredentialAuthority          @default(EDUCATION_ONLY)
+  jurisdiction           String?
   specialty              String?
   credentialNumber       String?
   issuedOn               DateTime?
@@ -782,6 +791,7 @@ model AppraisalAssignment {
   status               AssignmentStatus @default(REQUESTED)
   intendedUse          String
   intendedUsers        String
+  engagementKind       String           @default("INTERNAL_MONITORING")
   valueType            ValueType        @default(FAIR_MARKET)
   effectiveOn          DateTime
   assignmentConditions String?

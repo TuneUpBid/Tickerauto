@@ -1,14 +1,22 @@
 import { AppShell } from "@/components/layout/shell";
-import { Card } from "@/components/ui/primitives";
+import { Badge, Card } from "@/components/ui/primitives";
+import { CredentialForm } from "@/components/settings/credential-form";
+import { catalogEntry } from "@/domain/credentials";
 import { requireUser } from "@/server/auth/require";
 import { prisma } from "@/server/db";
 
 export default async function SettingsPage() {
   const user = await requireUser();
-  const sessions = await prisma.session.findMany({
-    where: { userId: user.id, revokedAt: null },
-    orderBy: { createdAt: "desc" },
-  });
+  const [sessions, credentials] = await Promise.all([
+    prisma.session.findMany({
+      where: { userId: user.id, revokedAt: null },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.appraiserCredential.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
   return (
     <AppShell user={user}>
       <h1 className="display text-4xl">Settings and security</h1>
@@ -41,6 +49,47 @@ export default async function SettingsPage() {
               </li>
             ))}
           </ul>
+        </Card>
+        <Card className="md:col-span-2">
+          <h2 className="display text-2xl">Credentials</h2>
+          <p className="text-muted mt-2 text-sm">
+            A California Vehicle Verifier license stamps identity. A verified ASA, IAAA, or ISA
+            record with current USPAP is what can sign value — and never on cars you own.
+          </p>
+          {credentials.length ? (
+            <ul className="mt-4 space-y-3 text-sm">
+              {credentials.map((credential) => {
+                const catalog = catalogEntry(credential.credentialType);
+                return (
+                  <li key={credential.id} className="border-line border-t pt-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="font-medium">{catalog.label}</p>
+                      <Badge
+                        tone={
+                          credential.verificationStatus === "VERIFIED"
+                            ? "up"
+                            : credential.verificationStatus === "REJECTED"
+                              ? "down"
+                              : "warn"
+                        }
+                      >
+                        {credential.verificationStatus} · {credential.authority}
+                      </Badge>
+                    </div>
+                    <p className="text-muted mt-1 text-xs">
+                      {credential.organization}
+                      {credential.credentialNumber ? ` · ${credential.credentialNumber}` : ""}
+                      {credential.jurisdiction ? ` · ${credential.jurisdiction}` : ""}
+                    </p>
+                    <p className="text-muted mt-1 text-xs">{catalog.summary}</p>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="text-muted mt-3 text-sm">No credentials on file yet.</p>
+          )}
+          <CredentialForm />
         </Card>
         <Card>
           <h2 className="display text-2xl">Appearance</h2>

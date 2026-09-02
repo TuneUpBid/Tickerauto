@@ -10,6 +10,7 @@ const PROTECTED = [
   "/assignments",
   "/workbench",
   "/lender",
+  "/lending",
   "/reports",
   "/settings",
   "/admin",

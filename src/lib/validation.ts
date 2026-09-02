@@ -128,8 +128,41 @@ export const appraisalRequestSchema = z.object({
   valuationId: z.string().optional(),
   intendedUse: z.string().min(3).max(240),
   intendedUsers: z.string().min(3).max(240),
+  engagementKind: z
+    .enum(["LENDING_COLLATERAL", "NET_WORTH", "INTERNAL_MONITORING"])
+    .default("LENDING_COLLATERAL"),
+  valueType: z
+    .enum([
+      "FAIR_MARKET",
+      "RETAIL_MARKET",
+      "WHOLESALE",
+      "ORDERLY_LIQUIDATION",
+      "FORCED_SALE",
+      "INSURANCE_AGREED",
+    ])
+    .default("FAIR_MARKET"),
   effectiveOn: z.string().min(1),
   scopeOfWork: z.string().min(10),
+});
+
+export const credentialSchema = z.object({
+  credentialType: z.enum([
+    "CA_VEHICLE_VERIFIER",
+    "USPAP_PERSONAL_PROPERTY",
+    "ASA_PERSONAL_PROPERTY",
+    "IAAA",
+    "ISA",
+    "OTHER_VALUE_DESIGNATION",
+  ]),
+  credentialNumber: z.string().max(80).optional().or(z.literal("")),
+  organization: z.string().min(2).max(160),
+  jurisdiction: z.string().max(80).optional().or(z.literal("")),
+  specialty: z.string().max(120).optional().or(z.literal("")),
+  issuedOn: z.string().optional().or(z.literal("")),
+  expiresOn: z.string().optional().or(z.literal("")),
+  uspapEducationCurrent: z.coerce.boolean().optional(),
+  uspapEducationThrough: z.string().optional().or(z.literal("")),
+  notes: z.string().max(500).optional().or(z.literal("")),
 });
 
 export const shareReportSchema = z.object({
@@ -147,3 +180,4 @@ export const lenderDecisionSchema = z.object({
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type VehicleInput = z.infer<typeof vehicleSchema>;
+export type CredentialInput = z.infer<typeof credentialSchema>;
